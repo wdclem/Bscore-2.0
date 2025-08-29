@@ -2,11 +2,10 @@
 
 FROM python:3.11-slim
 
-# Install system dependencies needed for sqlite3 and others
+# Install system dependencies
 RUN apt-get update && apt-get install -y \
-    sqlite3 \
-    libsqlite3-dev \
     build-essential \
+    libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Python packages
@@ -17,4 +16,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . /app
 WORKDIR /app
 
-CMD ["python", "your_script.py"]
+CMD ["python", "app/main.py"]
