@@ -1,12 +1,13 @@
 import requests
 from bs4 import BeautifulSoup
 from datetime import datetime
-import sqlite3
 
 BASE_URL = "https://www.hockey-reference.com/boxscores/"
 
 def fetch_nhl_data():
-    response = requests.get(BASE_URL)
+    headers = {"User-Agent": "Mozilla/5.0"}
+    response = requests.get(BASE_URL, headers=headers, timeout=15)
+    response.raise_for_status()
     soup = BeautifulSoup(response.content, 'html.parser')
     games = []
     current_year = datetime.now().year

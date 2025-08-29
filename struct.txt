@@ -1,0 +1,22 @@
+my-project/
+│
+├── frontend/                   # Next.js frontend app
+│   ├── public/                 # Static files
+│   ├── pages/                  # Next.js pages (routes)
+│   ├── components/             # Reusable React components
+│   ├── styles/                 # Global or modular CSS/SCSS
+│   ├── utils/                  # Frontend-specific helpers
+│   ├── package.json            # Next.js dependencies
+│   └── next.config.js          # Next.js config
+│
+├── backend/                    # Python backend (FastAPI, Flask, etc.)
+│   ├── app/                    # Your backend application code
+│   │   ├── api/                # API route definitions
+│   │   ├── models/             # DB models (e.g., SQLAlchemy or Pydantic)
+│   │   ├── services/           # Business logic / services
+│   │   ├── db/                 # Database initialization and sessions
+│   │   ├── main.py             # FastAPI entry point
+│   │   └── config.py           # Environment settings
+│   │
+│   ├── requirements.txt        # Python dependencies
+│   └── Dockerfile    
