@@ -8,6 +8,7 @@ class Team(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, nullable=False)
     league_id = Column(Integer, ForeignKey("leagues.id"))
+    logo_url = Column(String)
 
     league = relationship("League", back_populates="teams")
     home_games = relationship("Game", back_populates="home_team", foreign_keys='Game.home_team_id')
