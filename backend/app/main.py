@@ -2,6 +2,7 @@ from datetime import datetime
 from db.session import Base, engine
 from sqlalchemy.orm import sessionmaker
 from league_scrapper import fetch_nfl_data, fetch_nhl_data, fetch_nba_data, fetch_mlb_data
+from premier_league_scrapper import fetch_premier_league_data
 from models import League, Team, Game
 import argparse
 
@@ -30,14 +31,25 @@ def get_or_create_team(session, name: str, league_id: int, logo_url: str = None)
     return team
 
 def get_or_create_game(session, home_team_id: int, away_team_id: int, game_date: datetime, league_id: int, home_score: int, away_score: int) -> Game:
-    game = session.query(Game).filter(
+    # Check if game already exists
+    existing_game = session.query(Game).filter(
         Game.home_team_id == home_team_id,
         Game.away_team_id == away_team_id,
         Game.game_date == game_date,
         Game.league_id == league_id
     ).first()
-    if game:
-        return game
+    
+    if existing_game:
+        # Update scores if they've changed
+        if existing_game.home_score != home_score or existing_game.away_score != away_score:
+            existing_game.home_score = home_score
+            existing_game.away_score = away_score
+            print(f"  🔄 Updated game: {existing_game.home_team.name} vs {existing_game.away_team.name}: {home_score}-{away_score}")
+        else:
+            print(f"  ⏭️  Skipped existing game: {existing_game.home_team.name} vs {existing_game.away_team.name}")
+        return existing_game
+    
+    # Create new game
     game = Game(
         game_date=game_date,
         home_team_id=home_team_id,
@@ -57,26 +69,55 @@ def run_scrape():
         "NHL": fetch_nhl_data,
         "NBA": fetch_nba_data,
         "MLB": fetch_mlb_data,
+        "PREMIER_LEAGUE": fetch_premier_league_data,
     }
 
     for league_name, fetcher in LEAGUE_FETCHERS.items():
         with SessionLocal() as session:
+            print(f"\n Processing {league_name}...")
             games = fetcher()
             league = get_or_create_league(session, league_name)
-            print(f"Processing {league.name} (id={league.id}), games={len(games)}")
+            print(f" Found {len(games)} games for {league.name}")
+
+            new_games = 0
+            updated_games = 0
+            skipped_games = 0
 
             for g in games:
                 game_date = g.get('game_date')
                 if not game_date:
                     print(f"⚠️  No date found for {g['homeTeam']} vs {g['awayTeam']}, skipping...")
                     continue
+                
                 home_team = get_or_create_team(session, g["homeTeam"], league.id, g.get("homeLogo"))
                 away_team = get_or_create_team(session, g["awayTeam"], league.id, g.get("awayLogo"))
-                game = get_or_create_game(session, home_team.id, away_team.id, game_date, league.id, int(g["homeScore"]), int(g["awayScore"]))
-                print(f"  + game: {home_team.name} vs {away_team.name} -> league_id={league.id}")
+                
+                # Check if this is a new or existing game
+                existing_game = session.query(Game).filter(
+                    Game.home_team_id == home_team.id,
+                    Game.away_team_id == away_team.id,
+                    Game.game_date == game_date,
+                    Game.league_id == league.id
+                ).first()
+                
+                if existing_game:
+                    if existing_game.home_score != int(g["homeScore"]) or existing_game.away_score != int(g["awayScore"]):
+                        existing_game.home_score = int(g["homeScore"])
+                        existing_game.away_score = int(g["awayScore"])
+                        updated_games += 1
+                        print(f"  🔄 Updated: {home_team.name} vs {away_team.name}: {g['homeScore']}-{g['awayScore']}")
+                    else:
+                        skipped_games += 1
+                        print(f"  ⏭️  Skipped: {home_team.name} vs {away_team.name}")
+                else:
+                    game = get_or_create_game(session, home_team.id, away_team.id, game_date, league.id, int(g["homeScore"]), int(g["awayScore"]))
+                    new_games += 1
+                    print(f"  ➕ New: {home_team.name} vs {away_team.name}: {g['homeScore']}-{g['awayScore']}")
 
             session.commit()
-    print("✅ Scheduled scrape complete")
+            print(f"✅ {league.name}: {new_games} new, {updated_games} updated, {skipped_games} skipped")
+    
+    print("\n🎉 Scraping complete!")
 
 def main():
     parser = argparse.ArgumentParser()
