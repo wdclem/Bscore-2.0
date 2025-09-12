@@ -1,7 +1,11 @@
 {
   "compilerOptions": {
+    "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@theme/*": ["./node_modules/react-theme-system/*"]
     }
-  }
+  },
+  "include": ["src/**/*", "node_modules/react-theme-system/**/*"],
+  "exclude": ["node_modules"]
 }
