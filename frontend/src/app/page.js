@@ -5,8 +5,15 @@ import Header from "@/components/Header";
 import LeagueSelectorGrid from "@/components/LeagueSelectorGrid";
 import ThemeSelector from "@/components/ThemeSelector";
 
+// Test import from theme-system using direct path
+import { useTheme } from 'react-theme-system';
+import { themes } from 'react-theme-system';
+
 export default function Home() {
   const [theme, setTheme] = useState('default');
+
+  // Test if theme-system imports work
+  console.log('Available themes:', Object.keys(themes));
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
