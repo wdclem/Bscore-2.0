@@ -14,8 +14,17 @@ export async function getLeagues() {
   return getJson("/leagues");
 }
 
-export async function getLeagueGames(leagueCode, limit = 20, offset = 0) {
-  return getJson(`/leagues/${leagueCode}/games?limit=${limit}&offset=${offset}`);
+export async function getLeagueGames(leagueCode, limit = 20, offset = 0, teamFilter = null) {
+  let url = `/leagues/${leagueCode}/games?limit=${limit}&offset=${offset}`;
+  if (teamFilter) {
+    url += `&team=${encodeURIComponent(teamFilter)}`;
+  }
+  return getJson(url);
+}
+
+// Add teams API function
+export async function getLeagueTeams(leagueCode) {
+  return getJson(`/leagues/${leagueCode}/teams`);
 }
 
 
