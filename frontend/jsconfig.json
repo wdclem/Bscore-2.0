@@ -3,9 +3,9 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"],
-      "@theme/*": ["./node_modules/react-theme-system/*"]
+      "@theme/*": ["./theme-system/*"]
     }
   },
-  "include": ["src/**/*", "node_modules/react-theme-system/**/*"],
+  "include": ["src/**/*", "theme-system/**/*"],
   "exclude": ["node_modules"]
 }

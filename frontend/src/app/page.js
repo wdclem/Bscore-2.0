@@ -5,9 +5,9 @@ import Header from "@/components/Header";
 import LeagueSelectorGrid from "@/components/LeagueSelectorGrid";
 import ThemeSelector from "@/components/ThemeSelector";
 
-// Test import from theme-system using direct path
-import { useTheme } from 'react-theme-system';
-import { themes } from 'react-theme-system';
+// Test import from theme-system using @theme alias
+import { useTheme } from '@theme/contexts/ThemeContext';
+import { themes } from '@theme/config/themes';
 
 export default function Home() {
   const [theme, setTheme] = useState('default');
