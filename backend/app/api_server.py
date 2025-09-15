@@ -31,16 +31,40 @@ async def get_leagues():
         leagues = session.query(League).all()
         return [{"id": l.id, "name": l.name, "code": l.name} for l in leagues]
 
-@app.get("/leagues/{league_code}/games")
-async def get_league_games(league_code: str, limit: int = 20, offset: int = 0):
+@app.get("/leagues/{league_code}/teams")
+async def get_league_teams(league_code: str):
     with SessionLocal() as session:
         league = session.query(League).filter(League.name == league_code.upper()).first()
         if not league:
             raise HTTPException(status_code=404, detail="League not found")
         
-        games = session.query(Game).filter(
-            Game.league_id == league.id
-        ).order_by(Game.game_date.desc()).offset(offset).limit(limit).all()
+        teams = session.query(Team).filter(Team.league_id == league.id).order_by(Team.name).all()
+        
+        result = []
+        for t in teams:
+            result.append({
+                "id": t.id,
+                "name": t.name,
+                "logoUrl": t.logo_url
+            })
+        return result
+
+@app.get("/leagues/{league_code}/games")
+async def get_league_games(league_code: str, limit: int = 20, offset: int = 0, team: str = None):
+    with SessionLocal() as session:
+        league = session.query(League).filter(League.name == league_code.upper()).first()
+        if not league:
+            raise HTTPException(status_code=404, detail="League not found")
+        
+        query = session.query(Game).filter(Game.league_id == league.id)
+        
+        # Add team filtering - both home and away teams
+        if team:
+            query = query.filter(
+                (Game.home_team.has(name=team)) | (Game.away_team.has(name=team))
+            )
+        
+        games = query.order_by(Game.game_date.desc()).offset(offset).limit(limit).all()
         
         result = []
         for g in games:
