@@ -14,8 +14,8 @@ export async function getLeagues() {
   return getJson("/leagues");
 }
 
-export async function getLeagueGames(leagueCode, limit = 20) {
-  return getJson(`/leagues/${leagueCode}/games?limit=${limit}`);
+export async function getLeagueGames(leagueCode, limit = 20, offset = 0) {
+  return getJson(`/leagues/${leagueCode}/games?limit=${limit}&offset=${offset}`);
 }
 
 

@@ -32,7 +32,7 @@ async def get_leagues():
         return [{"id": l.id, "name": l.name, "code": l.name} for l in leagues]
 
 @app.get("/leagues/{league_code}/games")
-async def get_league_games(league_code: str, limit: int = 20):
+async def get_league_games(league_code: str, limit: int = 20, offset: int = 0):
     with SessionLocal() as session:
         league = session.query(League).filter(League.name == league_code.upper()).first()
         if not league:
@@ -40,7 +40,7 @@ async def get_league_games(league_code: str, limit: int = 20):
         
         games = session.query(Game).filter(
             Game.league_id == league.id
-        ).order_by(Game.game_date.desc()).limit(limit).all()
+        ).order_by(Game.game_date.desc()).offset(offset).limit(limit).all()
         
         result = []
         for g in games:

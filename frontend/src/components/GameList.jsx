@@ -1,4 +1,4 @@
-export default function GameList({ games }) {
+export default function GameList({ games, loading, onLoadMore, hasMore, loadingMore }) {
   return (
     <div className="space-y-4">
       {games.map((g) => (
@@ -39,6 +39,30 @@ export default function GameList({ games }) {
           </div>
         </div>
       ))}
+      
+      {/* Load More Button */}
+      {hasMore && (
+        <div className="flex justify-center mt-8">
+          <button
+            onClick={onLoadMore}
+            disabled={loadingMore}
+            className="
+              px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg
+              hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed
+              transition-colors duration-200
+            "
+          >
+            {loadingMore ? 'Loading...' : 'Load More Games'}
+          </button>
+        </div>
+      )}
+      
+      {/* Loading State */}
+      {loading && games.length === 0 && (
+        <div className="text-center py-8">
+          <div className="text-gray-500">Loading games...</div>
+        </div>
+      )}
     </div>
   );
 }
