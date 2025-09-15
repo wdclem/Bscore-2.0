@@ -1,18 +1,25 @@
+import GameSkeleton from './GameSkeleton';
+
 export default function GameList({ games, loading, onLoadMore, hasMore, loadingMore }) {
+  // Show skeleton while loading
+  if (loading && games.length === 0) {
+    return <GameSkeleton />;
+  }
+
   return (
     <div className="space-y-4">
       {games.map((g) => (
         <div key={g.id} className="
-          bg-white rounded-xl shadow-lg hover:shadow-xl 
+          bg-white rounded-xl shadow-lg hover:shadow-xl
           transition-all duration-300 p-6
           border-l-4 border-blue-500
         ">
           <div className="flex items-center justify-between">
             <div className="flex-1">
               <div className="text-sm text-gray-500 mb-3 font-medium">
-                {new Date(g.gameDate).toLocaleDateString('en-US', { 
-                  weekday: 'long', 
-                  month: 'short', 
+                {new Date(g.gameDate).toLocaleDateString('en-US', {
+                  weekday: 'long',
+                  month: 'short',
                   day: 'numeric',
                   hour: 'numeric',
                   minute: '2-digit'
@@ -39,7 +46,7 @@ export default function GameList({ games, loading, onLoadMore, hasMore, loadingM
           </div>
         </div>
       ))}
-      
+
       {/* Load More Button */}
       {hasMore && (
         <div className="flex justify-center mt-8">
@@ -54,13 +61,6 @@ export default function GameList({ games, loading, onLoadMore, hasMore, loadingM
           >
             {loadingMore ? 'Loading...' : 'Load More Games'}
           </button>
-        </div>
-      )}
-      
-      {/* Loading State */}
-      {loading && games.length === 0 && (
-        <div className="text-center py-8">
-          <div className="text-gray-500">Loading games...</div>
         </div>
       )}
     </div>
