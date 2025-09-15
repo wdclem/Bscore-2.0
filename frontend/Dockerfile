@@ -2,13 +2,16 @@ FROM node:18-alpine
 WORKDIR /app
 
 # Copy package files
-COPY package*.json ./
+COPY frontend/package*.json ./
 
-# Install dependencies (use npm install instead of npm ci)
+# Copy theme-system from root context
+COPY frontend/theme-system ./
+
+# Install dependencies (this will now find the theme-system)
 RUN npm install
 
-# Copy all files
-COPY . .
+# Copy all frontend files
+COPY frontend/ ./
 
 EXPOSE 3000
 CMD ["npm", "run", "dev"]

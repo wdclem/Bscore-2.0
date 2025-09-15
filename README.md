@@ -37,3 +37,32 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+
+
+Usefull command :
+
+DB performance :
+
+# See what data is being returned
+curl "http://localhost:8001/leagues/nfl/games?limit=10&offset=0" | jq .
+
+# Test API response time
+curl -w "@-" -o /dev/null -s "http://localhost:8001/leagues/nfl/games?limit=10&offset=0" <<< "
+     time_namelookup:  %{time_namelookup}\n
+        time_connect:  %{time_connect}\n
+     time_appconnect:  %{time_appconnect}\n
+    time_pretransfer:  %{time_pretransfer}\n
+       time_redirect:  %{time_redirect}\n
+  time_starttransfer:  %{time_starttransfer}\n
+                     ----------\n
+          time_total:  %{time_total}\n
+
+# Check how many games exist per league
+docker exec bscore-20-db-1 psql -U postgres -d nhl_db -c "
+SELECT l.name as league, COUNT(g.id) as game_count 
+FROM leagues l 
+LEFT JOIN games g ON l.id = g.league_id 
+GROUP BY l.id, l.name 
+ORDER BY game_count DESC;
+"
