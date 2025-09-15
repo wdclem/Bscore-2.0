@@ -12,9 +12,6 @@ import { themes } from '@theme/config/themes';
 export default function Home() {
   const [theme, setTheme] = useState('default');
 
-  // Test if theme-system imports work
-  console.log('Available themes:', Object.keys(themes));
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       <Header />
