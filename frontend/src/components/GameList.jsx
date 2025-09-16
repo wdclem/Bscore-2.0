@@ -32,8 +32,6 @@ export default function GameList({ games, loading, onLoadMore, hasMore, loadingM
                   weekday: 'long',
                   month: 'short',
                   day: 'numeric',
-                  // hour: 'numeric',
-                  // minute: '2-digit'
                 })}
               </div>
               <div className="text-xl font-bold text-gray-900">
