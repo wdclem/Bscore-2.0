@@ -190,6 +190,70 @@ export const themes = {
         hover: 'hover:shadow-3xl hover:scale-105',
         transition: 'transition-all duration-500'
       }
+    },
+    'videobg-dark': {
+      name: 'Video Background Dark',
+      description: 'Dark video background with stadium-video5',
+      colors: {
+        primary: 'white',
+        secondary: 'gray',
+        accent: 'blue',
+        background: 'black',
+        surface: 'white',
+        text: 'white',
+        textSecondary: 'gray-300',
+        border: 'gray-200',
+        success: 'green',
+        warning: 'yellow',
+        error: 'red'
+      },
+      fonts: {
+        heading: 'font-light',
+        body: 'font-normal',
+        mono: 'font-mono'
+      },
+      spacing: {
+        container: 'max-w-7xl',
+        section: 'py-20',
+        card: 'p-8'
+      },
+      effects: {
+        shadow: 'shadow-2xl',
+        hover: 'hover:shadow-3xl hover:scale-105',
+        transition: 'transition-all duration-500'
+      }
+    },
+    'videobg-light': {
+      name: 'Video Background Light',
+      description: 'Light summer video background with emerald accents',
+      colors: {
+        primary: 'white',
+        secondary: 'gray',
+        accent: 'emerald',
+        background: 'white',
+        surface: 'white',
+        text: 'white',
+        textSecondary: 'gray-300',
+        border: 'gray-200',
+        success: 'emerald',
+        warning: 'yellow',
+        error: 'red'
+      },
+      fonts: {
+        heading: 'font-light',
+        body: 'font-normal',
+        mono: 'font-mono'
+      },
+      spacing: {
+        container: 'max-w-7xl',
+        section: 'py-20',
+        card: 'p-8'
+      },
+      effects: {
+        shadow: 'shadow-2xl',
+        hover: 'hover:shadow-3xl hover:scale-105',
+        transition: 'transition-all duration-500'
+      }
     }
   };
   
