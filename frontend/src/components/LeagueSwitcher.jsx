@@ -42,10 +42,10 @@ export default function LeagueSwitcher({ currentLeague }) {
 
   return (
     <div className="relative">
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="px-4 py-2 bg-white border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent text-left flex items-center justify-between hover:bg-gray-50 transition-colors min-w-[200px]"
-      >
+        <button
+            onClick={() => setIsOpen(!isOpen)}
+            className="px-4 py-2 bg-white border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent text-left flex items-center justify-between hover:bg-gray-50 transition-colors min-w-[200px]"
+        >
         <span className="text-gray-900 font-medium">
           {currentLeagueData ? currentLeagueData.name : 'Select League'}
         </span>
