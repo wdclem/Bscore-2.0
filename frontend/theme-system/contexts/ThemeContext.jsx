@@ -13,7 +13,7 @@ export const useTheme = () => {
 };
 
 export const ThemeProvider = ({ children }) => {
-  const [theme, setTheme] = useState('default');
+  const [theme, setTheme] = useState('videobg-1');
   const [isLoaded, setIsLoaded] = useState(false);
 
   // Load theme from localStorage on mount

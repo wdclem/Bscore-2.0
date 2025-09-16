@@ -158,6 +158,38 @@ export const themes = {
         hover: 'hover:shadow-xl hover:rotate-1',
         transition: 'transition-all duration-300'
       }
+    },
+    'videobg-1': {
+      name: 'Video Background 1',
+      description: 'Video background with clean minimal cards',
+      colors: {
+        primary: 'white',
+        secondary: 'gray',
+        accent: 'blue',
+        background: 'black',
+        surface: 'white',
+        text: 'white',
+        textSecondary: 'gray-300',
+        border: 'gray-200',
+        success: 'green',
+        warning: 'yellow',
+        error: 'red'
+      },
+      fonts: {
+        heading: 'font-light',
+        body: 'font-normal',
+        mono: 'font-mono'
+      },
+      spacing: {
+        container: 'max-w-7xl',
+        section: 'py-20',
+        card: 'p-8'
+      },
+      effects: {
+        shadow: 'shadow-2xl',
+        hover: 'hover:shadow-3xl hover:scale-105',
+        transition: 'transition-all duration-500'
+      }
     }
   };
   
