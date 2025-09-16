@@ -6,6 +6,16 @@ export default function GameList({ games, loading, onLoadMore, hasMore, loadingM
     return <GameSkeleton />;
   }
 
+  // Show message when no games
+  if (!loading && games.length === 0) {
+    return (
+      <div className="text-center py-12">
+        <div className="text-gray-500 text-lg mb-2">No games found</div>
+        <div className="text-gray-400 text-sm">Games will appear here once data is available</div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4">
       {games.map((g) => (
@@ -18,11 +28,12 @@ export default function GameList({ games, loading, onLoadMore, hasMore, loadingM
             <div className="flex-1">
               <div className="text-sm text-gray-500 mb-3 font-medium">
                 {new Date(g.gameDate).toLocaleDateString('en-US', {
+                  year: "numeric",
                   weekday: 'long',
                   month: 'short',
                   day: 'numeric',
-                  hour: 'numeric',
-                  minute: '2-digit'
+                  // hour: 'numeric',
+                  // minute: '2-digit'
                 })}
               </div>
               <div className="text-xl font-bold text-gray-900">
