@@ -25,4 +25,17 @@ body {
   .text-balance {
     text-wrap: balance;
   }
+  
+  /* 3D Card Flip Effects */
+  .backface-hidden {
+    backface-visibility: hidden;
+  }
+  
+  .rotate-y-180 {
+    transform: rotateY(180deg);
+  }
+  
+  .transform-gpu {
+    transform: translateZ(0);
+  }
 }
