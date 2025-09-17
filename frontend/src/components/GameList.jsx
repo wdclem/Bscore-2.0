@@ -1,6 +1,33 @@
 import GameSkeleton from './GameSkeleton';
+import GameCard from './GameCard';
+import { useTheme } from '@theme/contexts/ThemeContext';
 
-export default function GameList({ games, loading, onLoadMore, hasMore, loadingMore }) {
+export default function GameList({ games, loading, onLoadMore, hasMore, loadingMore, league }) {
+  const { theme } = useTheme();
+
+  // Get text colors based on theme
+  const getTextColor = () => {
+    switch (theme) {
+      case 'videobg-dark':
+        return 'text-gray-300';
+      case 'videobg-light':
+        return 'text-emerald-700';
+      default:
+        return 'text-gray-500';
+    }
+  };
+
+  const getSubTextColor = () => {
+    switch (theme) {
+      case 'videobg-dark':
+        return 'text-gray-400';
+      case 'videobg-light':
+        return 'text-emerald-600';
+      default:
+        return 'text-gray-400';
+    }
+  };
+
   // Show skeleton while loading
   if (loading && games.length === 0) {
     return <GameSkeleton />;
@@ -10,51 +37,20 @@ export default function GameList({ games, loading, onLoadMore, hasMore, loadingM
   if (!loading && games.length === 0) {
     return (
       <div className="text-center py-12">
-        <div className="text-gray-500 text-lg mb-2">No games found</div>
-        <div className="text-gray-400 text-sm">Games will appear here once data is available</div>
+        <div className={`text-lg mb-2 ${getTextColor()}`}>No games found</div>
+        <div className={`text-sm ${getSubTextColor()}`}>Games will appear here once data is available</div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-4">
-      {games.map((g) => (
-        <div key={g.id} className="
-          bg-white rounded-xl shadow-lg hover:shadow-xl
-          transition-all duration-300 p-6
-          border-l-4 border-blue-500
-        ">
-          <div className="flex items-center justify-between">
-            <div className="flex-1">
-              <div className="text-sm text-gray-500 mb-3 font-medium">
-                {new Date(g.gameDate).toLocaleDateString('en-US', {
-                  year: "numeric",
-                  weekday: 'long',
-                  month: 'short',
-                  day: 'numeric',
-                })}
-              </div>
-              <div className="text-xl font-bold text-gray-900">
-                <span className="text-gray-600">{g.awayTeam}</span>
-                <span className="mx-4 text-gray-400">@</span>
-                <span>{g.homeTeam}</span>
-              </div>
-            </div>
-            <div className="text-right">
-              <div className="text-3xl font-black text-gray-900">
-                <span className={g.awayScore > g.homeScore ? "text-green-600" : ""}>
-                  {g.awayScore ?? "-"}
-                </span>
-                <span className="mx-3 text-gray-400">-</span>
-                <span className={g.homeScore > g.awayScore ? "text-green-600" : ""}>
-                  {g.homeScore ?? "-"}
-                </span>
-              </div>
-              <div className="text-sm text-gray-500 mt-1 font-medium">Final</div>
-            </div>
-          </div>
-        </div>
-      ))}
+    <div className="space-y-8">
+      {/* Cards Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12">
+        {games.map((game) => (
+          <GameCard key={game.id} game={game} league={league} />
+        ))}
+      </div>
 
       {/* Load More Button */}
       {hasMore && (
@@ -63,9 +59,9 @@ export default function GameList({ games, loading, onLoadMore, hasMore, loadingM
             onClick={onLoadMore}
             disabled={loadingMore}
             className="
-              px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg
-              hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed
-              transition-colors duration-200
+              px-8 py-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-bold rounded-xl
+              hover:from-blue-700 hover:to-blue-800 disabled:from-blue-400 disabled:to-blue-500 disabled:cursor-not-allowed
+              transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105
             "
           >
             {loadingMore ? 'Loading...' : 'Load More Games'}
