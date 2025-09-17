@@ -58,7 +58,6 @@ async def get_league_games(league_code: str, limit: int = 20, offset: int = 0, t
         
         query = session.query(Game).filter(Game.league_id == league.id)
         
-        # Add team filtering - both home and away teams
         if team:
             query = query.filter(
                 (Game.home_team.has(name=team)) | (Game.away_team.has(name=team))
@@ -73,6 +72,8 @@ async def get_league_games(league_code: str, limit: int = 20, offset: int = 0, t
                 "gameDate": g.game_date.isoformat(),
                 "homeTeam": g.home_team.name,
                 "awayTeam": g.away_team.name,
+                "homeTeamLogo": g.home_team.logo_url,
+                "awayTeamLogo": g.away_team.logo_url,
                 "homeScore": g.home_score,
                 "awayScore": g.away_score
             })
