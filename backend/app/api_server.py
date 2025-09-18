@@ -28,13 +28,13 @@ Base.metadata.create_all(bind=engine)
 async def root():
     return {"message": "BetterScore API is running"}
 
-@app.get("/leagues")
+@app.get("/api/leagues")
 async def get_leagues():
     with SessionLocal() as session:
         leagues = session.query(League).all()
         return [{"id": l.id, "name": l.name, "code": l.name} for l in leagues]
 
-@app.get("/leagues/{league_code}/teams")
+@app.get("/api/leagues/{league_code}/teams")
 async def get_league_teams(league_code: str):
     with SessionLocal() as session:
         league = session.query(League).filter(League.name == league_code.upper()).first()
@@ -76,7 +76,7 @@ async def get_league_games(
             ))
         
         # Get games with pagination
-        games = query.offset(offset).limit(limit).all()
+        games = query.order_by(Game.game_date.desc()).offset(offset).limit(limit).all()
         
         # Format response
         result = []
