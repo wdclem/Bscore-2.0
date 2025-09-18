@@ -36,9 +36,6 @@ export default function Header() {
           </Link>
           
           <nav className="hidden md:flex items-center gap-8">
-            <Link href="/league-selector" className="text-white text-opacity-80 hover:text-white hover:text-opacity-100 font-light transition-all duration-300">
-              Leagues
-            </Link>
             <Link href="/about" className="text-white text-opacity-80 hover:text-white hover:text-opacity-100 font-light transition-all duration-300">
               About
             </Link>
@@ -69,9 +66,6 @@ export default function Header() {
           Better<span className={`text-${theme === 'dark' ? 'blue-400' : 'blue-600'}`}>Score</span>
         </Link>
         <nav className="flex items-center gap-6">
-          <Link href="/league-selector" className={`${themeClasses.textSecondary} hover:text-blue-600 font-medium transition-colors`}>
-            Leagues
-          </Link>
           <Link href="/about" className={`${themeClasses.textSecondary} hover:text-blue-600 font-medium transition-colors`}>
             About
           </Link>
