@@ -4,9 +4,11 @@ import { useState } from 'react';
 import Header from "@/components/Header";
 import FloatingSidePanel from "@/components/FloatingSidePanel";
 import { useTheme } from "@theme/contexts/ThemeContext";
+import { getThemeClasses } from "@theme/config/themes";
 
 export default function Home() {
   const { theme } = useTheme();
+  const themeClasses = getThemeClasses(theme);
   const [showLeagueSelection, setShowLeagueSelection] = useState(false);
 
   const leagues = [
@@ -35,20 +37,15 @@ export default function Home() {
     return (
       <div className="relative min-h-screen overflow-hidden">
         {/* Video Background */}
-        <div className="absolute inset-0 z-0">
-          <video
-            key={theme} // Force re-render when theme changes
-            autoPlay
-            muted
-            loop
-            playsInline
-            className="w-full h-full object-cover"
-          >
-            <source src={getVideoSource()} type="video/mp4" />
-          </video>
-          {/* Subtle overlay for better text readability */}
-          <div className="absolute inset-0 bg-black bg-opacity-30"></div>
-        </div>
+        <video
+          key={theme}
+          autoPlay
+          muted
+          loop
+          className="absolute inset-0 w-full h-full object-cover z-0"
+        >
+          <source src={getVideoSource()} type="video/mp4" />
+        </video>
 
         {/* Floating Side Panel */}
         <FloatingSidePanel />
@@ -61,7 +58,7 @@ export default function Home() {
           <section className="h-screen flex flex-col justify-center items-center">
             <div className="max-w-4xl mx-auto px-6 text-center">
               <h1 className="text-7xl font-light mb-6 tracking-tight text-white">
-                Better<span className="text-blue-400">Score</span>
+                Better<span className={theme === 'videobg-light' ? 'text-emerald-400' : 'text-blue-400'}>Score</span>
               </h1>
               <p className="text-2xl mb-16 leading-relaxed text-white text-opacity-90">
                 Experience sports like never before
@@ -71,7 +68,7 @@ export default function Home() {
               <div className="flex flex-col items-center justify-center gap-4 md:flex-row">
                 <button 
                   onClick={() => setShowLeagueSelection(!showLeagueSelection)}
-                  className="group flex items-center gap-4 px-8 py-4 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white transition-all duration-300 hover:scale-105"
+                  className={`group flex items-center gap-4 px-8 py-4 rounded-2xl ${theme === 'videobg-light' ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-blue-600 hover:bg-blue-700'} text-white transition-all duration-300 hover:scale-105`}
                 >
                   <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center">
                     <span className="text-xl">🏈</span>
@@ -86,7 +83,7 @@ export default function Home() {
                 </button>
                 
                 <a href="/league-selector" className="group flex items-center gap-4 px-8 py-4 rounded-2xl bg-white bg-opacity-20 hover:bg-opacity-30 text-white transition-all duration-300 hover:scale-105">
-                  <div className="w-12 h-12 rounded-full bg-blue-600 flex items-center justify-center">
+                  <div className={`w-12 h-12 rounded-full ${theme === 'videobg-light' ? 'bg-emerald-600' : 'bg-blue-600'} flex items-center justify-center`}>
                     <span className="text-xl">🏆</span>
                   </div>
                   <div className="text-left">
@@ -114,7 +111,7 @@ export default function Home() {
                         href={`/${league.code}/games`}
                         className="group flex items-center gap-4 px-6 py-4 rounded-2xl bg-white bg-opacity-20 hover:bg-opacity-30 text-white transition-all duration-300 hover:scale-105 min-w-[200px]"
                       >
-                        <div className="w-12 h-12 rounded-full bg-blue-600 flex items-center justify-center">
+                        <div className={`w-12 h-12 rounded-full ${theme === 'videobg-light' ? 'bg-emerald-600' : 'bg-blue-600'} flex items-center justify-center`}>
                           <span className="text-xl">{league.icon}</span>
                         </div>
                         <div className="text-left flex-1">

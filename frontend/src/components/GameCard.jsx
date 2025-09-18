@@ -47,7 +47,7 @@ export default function GameCard({ game, league }) {
   };
 
   const style = getLeagueStyle(league);
-  const gameDate = new Date(game.gameDate);
+  const gameDate = game.game_date ? new Date(game.game_date) : null;
   const isWinner = (score, opponentScore) => score > opponentScore;
 
   return (
@@ -73,11 +73,11 @@ export default function GameCard({ game, league }) {
 
           {/* Date */}
           <div className={`text-sm ${style.text} opacity-80 mb-4`}>
-            {gameDate.toLocaleDateString('en-US', {
-              weekday: 'short',
-              month: 'short',
-              day: 'numeric'
-            })}
+            {gameDate ? gameDate.toLocaleDateString('en-US', {
+                weekday: 'short',
+                month: 'short',
+                day: 'numeric'
+                }) : 'TBD'}
           </div>
 
           {/* Teams and Score */}
