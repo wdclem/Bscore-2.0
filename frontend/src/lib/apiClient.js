@@ -11,11 +11,11 @@ export async function getJson(path, init) {
 
 // API functions for leagues and games
 export async function getLeagues() {
-  return getJson("/leagues");
+  return getJson("/api/leagues");
 }
 
 export async function getLeagueGames(leagueCode, limit = 20, offset = 0, teamFilter = null) {
-  let url = `/leagues/${leagueCode}/games?limit=${limit}&offset=${offset}`;
+  let url = `/api/leagues/${leagueCode}/games?limit=${limit}&offset=${offset}`;
   if (teamFilter) {
     url += `&team=${encodeURIComponent(teamFilter)}`;
   }
@@ -24,7 +24,7 @@ export async function getLeagueGames(leagueCode, limit = 20, offset = 0, teamFil
 
 // Add teams API function
 export async function getLeagueTeams(leagueCode) {
-  return getJson(`/leagues/${leagueCode}/teams`);
+  return getJson(`/api/leagues/${leagueCode}/teams`);
 }
 
 
