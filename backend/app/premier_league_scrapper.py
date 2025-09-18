@@ -70,6 +70,9 @@ def fetch_premier_league_data():
                 home_cell = row.find('td', {'data-stat': 'home_team'})
                 score_cell = row.find('td', {'data-stat': 'score'})
                 away_cell = row.find('td', {'data-stat': 'away_team'})
+                attendance_cell = row.find('td', {'data-stat': 'attendance'})
+                venue_cell = row.find('td', {'data-stat': 'venue'})
+                referee_cell = row.find('td', {'data-stat': 'referee'})
                 
                 if not all([date_cell, time_cell, home_cell, score_cell, away_cell]):
                     continue
@@ -110,6 +113,11 @@ def fetch_premier_league_data():
                 time_text = time_cell.get_text(strip=True)
                 time_text = time_text.split('(')[0].strip()
                 
+                # Get additional data
+                attendance = attendance_cell.get_text(strip=True) if attendance_cell else None
+                venue = venue_cell.get_text(strip=True) if venue_cell else None
+                referee = referee_cell.get_text(strip=True) if referee_cell else None
+                
                 # Parse date and time
                 game_date = None
                 if date_text:
@@ -137,9 +145,12 @@ def fetch_premier_league_data():
                         'awayScore': away_score,
                         'homeLogo': home_logo,
                         'awayLogo': away_logo,
+                        'attendance': attendance,
+                        'venue': venue,
+                        'referee': referee,
                     }
                     games.append(game_data)
-                    print(f"  ✅ {home_team} vs {away_team}: {home_score}-{away_score} (logos: {bool(home_logo)}, {bool(away_logo)})")
+                    print(f"  ✅ {home_team} vs {away_team}: {home_score}-{away_score} at {venue} (att: {attendance}, ref: {referee})")
                     
             except Exception as e:
                 print(f"Error parsing row {i}: {e}")

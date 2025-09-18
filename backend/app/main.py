@@ -30,7 +30,7 @@ def get_or_create_team(session, name: str, league_id: int, logo_url: str = None)
     session.flush()
     return team
 
-def get_or_create_game(session, home_team_id: int, away_team_id: int, game_date: datetime, league_id: int, home_score: int, away_score: int) -> Game:
+def get_or_create_game(session, home_team_id: int, away_team_id: int, game_date: datetime, league_id: int, home_score: int, away_score: int, attendance: str = None, venue: str = None, referee: str = None) -> Game:
     # Check if game already exists
     existing_game = session.query(Game).filter(
         Game.home_team_id == home_team_id,
@@ -49,7 +49,7 @@ def get_or_create_game(session, home_team_id: int, away_team_id: int, game_date:
             print(f"  ⏭️  Skipped existing game: {existing_game.home_team.name} vs {existing_game.away_team.name}")
         return existing_game
     
-    # Create new game
+    # Create new game with ALL data
     game = Game(
         game_date=game_date,
         home_team_id=home_team_id,
@@ -57,6 +57,9 @@ def get_or_create_game(session, home_team_id: int, away_team_id: int, game_date:
         home_score=home_score,
         away_score=away_score,
         league_id=league_id,
+        attendance=attendance,  # ← Include in creation
+        venue=venue,            # ← Include in creation
+        referee=referee,        # ← Include in creation
     )
     session.add(game)
     session.flush()
@@ -101,18 +104,36 @@ def run_scrape():
                 ).first()
                 
                 if existing_game:
+                    # Always update the additional data, regardless of score changes
+                    existing_game.attendance = g.get("attendance")
+                    existing_game.venue = g.get("venue") 
+                    existing_game.referee = g.get("referee")
+                    
+                    # Only update scores if they've changed
                     if existing_game.home_score != int(g["homeScore"]) or existing_game.away_score != int(g["awayScore"]):
                         existing_game.home_score = int(g["homeScore"])
                         existing_game.away_score = int(g["awayScore"])
                         updated_games += 1
-                        print(f"  🔄 Updated: {home_team.name} vs {away_team.name}: {g['homeScore']}-{g['awayScore']}")
+                        print(f"  🔄 Updated: {home_team.name} vs {away_team.name}: {g['homeScore']}-{g['awayScore']} at {g.get('venue', 'Unknown')}")
                     else:
                         skipped_games += 1
                         print(f"  ⏭️  Skipped: {home_team.name} vs {away_team.name}")
                 else:
-                    game = get_or_create_game(session, home_team.id, away_team.id, game_date, league.id, int(g["homeScore"]), int(g["awayScore"]))
+                    # Create new game with all data
+                    game = get_or_create_game(
+                        session, 
+                        home_team.id, 
+                        away_team.id, 
+                        game_date, 
+                        league.id, 
+                        int(g["homeScore"]), 
+                        int(g["awayScore"]),
+                        g.get("attendance"),  # ← Pass the data
+                        g.get("venue"),       # ← Pass the data
+                        g.get("referee")      # ← Pass the data
+                    )
                     new_games += 1
-                    print(f"  ➕ New: {home_team.name} vs {away_team.name}: {g['homeScore']}-{g['awayScore']}")
+                    print(f"  ➕ New: {home_team.name} vs {away_team.name}: {g['homeScore']}-{g['awayScore']} at {g.get('venue', 'Unknown')}")
 
             session.commit()
             print(f"✅ {league.name}: {new_games} new, {updated_games} updated, {skipped_games} skipped")
