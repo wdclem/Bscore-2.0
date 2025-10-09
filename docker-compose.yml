@@ -16,6 +16,21 @@ services:
     depends_on:
       - db
 
+  scraper:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    command: python app/main.py
+    volumes:
+      - ./backend:/app
+    env_file:
+      - .env
+    environment:
+      - POSTGRES_URL=postgresql+psycopg2://postgres:postgres@db:5432/nhl_db
+    depends_on:
+      - db
+    restart: unless-stopped
+
   frontend:
     build:
       context: .

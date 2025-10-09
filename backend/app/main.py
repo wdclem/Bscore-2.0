@@ -151,7 +151,7 @@ def main():
         from apscheduler.schedulers.blocking import BlockingScheduler
         scheduler = BlockingScheduler()
         scheduler.add_job(run_scrape, "interval", hours=6, next_run_time=datetime.utcnow())
-        print("🕐 Scheduler started - running every hour")
+        print("🕐 Scheduler started - running every 6 hours")
         scheduler.start()
 
 if __name__ == "__main__":
