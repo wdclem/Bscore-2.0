@@ -1,4 +1,3 @@
-import GameSkeleton from './GameSkeleton';
 import GameCard from './GameCard';
 import { useTheme } from '@theme/contexts/ThemeContext';
 
@@ -28,10 +27,10 @@ export default function GameList({ games, loading, onLoadMore, hasMore, loadingM
     }
   };
 
-  // Show skeleton while loading
-  if (loading && games.length === 0) {
-    return <GameSkeleton />;
-  }
+  // // Show skeleton while loading
+  // if (loading && games.length === 0) {
+  //   return <GameSkeleton />;
+  // }
 
   // Show message when no games
   if (!loading && games.length === 0) {
