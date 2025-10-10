@@ -5,15 +5,19 @@ from db.session import Base, engine
 from models import League, Team, Game
 from datetime import datetime
 import uvicorn
+import os
 from typing import Optional
 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Text, and_, or_
 from sqlalchemy.orm import relationship
 
 app = FastAPI(title="BetterScore API")
 
+# Get allowed origins from environment variable or use defaults
+ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000").split(",")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
