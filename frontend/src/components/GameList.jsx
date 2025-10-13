@@ -45,7 +45,7 @@ export default function GameList({ games, loading, onLoadMore, hasMore, loadingM
   return (
     <div className="space-y-8">
       {/* Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 lg:gap-12 px-4 sm:px-0">
         {games.map((game) => (
           <GameCard key={game.id} game={game} league={league} />
         ))}
@@ -53,14 +53,15 @@ export default function GameList({ games, loading, onLoadMore, hasMore, loadingM
 
       {/* Load More Button */}
       {hasMore && (
-        <div className="flex justify-center mt-8">
+        <div className="flex justify-center mt-8 px-4">
           <button
             onClick={onLoadMore}
             disabled={loadingMore}
             className="
-              px-8 py-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-bold rounded-xl
+              w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-bold rounded-xl
               hover:from-blue-700 hover:to-blue-800 disabled:from-blue-400 disabled:to-blue-500 disabled:cursor-not-allowed
               transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105
+              touch-manipulation
             "
           >
             {loadingMore ? 'Loading...' : 'Load More Games'}
