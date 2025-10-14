@@ -1,9 +1,56 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { isFavoriteTeam, toggleFavoriteTeam } from '@/lib/favorites';
 
 export default function GameCard({ game, league }) {
   const [isFlipped, setIsFlipped] = useState(false);
+  const [homeIsFavorite, setHomeIsFavorite] = useState(false);
+  const [awayIsFavorite, setAwayIsFavorite] = useState(false);
+  
+  useEffect(() => {
+    setHomeIsFavorite(isFavoriteTeam(game.homeTeam));
+    setAwayIsFavorite(isFavoriteTeam(game.awayTeam));
+  }, [game.homeTeam, game.awayTeam]);
+  
+  const handleToggleFavorite = (teamName, e) => {
+    e.stopPropagation(); // Prevent card flip
+    toggleFavoriteTeam(teamName);
+    
+    // Update state
+    if (teamName === game.homeTeam) {
+      setHomeIsFavorite(!homeIsFavorite);
+    } else {
+      setAwayIsFavorite(!awayIsFavorite);
+    }
+  };
+  
+  const isFavoriteGame = homeIsFavorite || awayIsFavorite;
+  
+  const handleShare = (e) => {
+    e.stopPropagation(); // Prevent card flip
+    
+    const gameUrl = `${window.location.origin}/${league.toLowerCase()}/games?game=${game.id}`;
+    const shareText = `${game.awayTeam} vs ${game.homeTeam} - ${game.awayScore ?? 0}-${game.homeScore ?? 0}`;
+    
+    // Try native share API first (mobile)
+    if (navigator.share) {
+      navigator.share({
+        title: shareText,
+        text: `Check out this game: ${shareText}`,
+        url: gameUrl
+      }).catch(() => {
+        // User cancelled, do nothing
+      });
+    } else {
+      // Fallback: copy to clipboard
+      navigator.clipboard.writeText(gameUrl).then(() => {
+        alert('Link copied to clipboard!');
+      }).catch(() => {
+        alert(`Share this link: ${gameUrl}`);
+      });
+    }
+  };
 
   const getLeagueStyle = (league) => {
     switch (league) {
@@ -49,9 +96,19 @@ export default function GameCard({ game, league }) {
   const style = getLeagueStyle(league);
   const gameDate = game.game_date ? new Date(game.game_date) : null;
   const isWinner = (score, opponentScore) => score > opponentScore;
+  
+  // Determine game status
+  const getGameStatus = () => {
+    if (!game.homeScore && !game.awayScore) {
+      return { label: 'SCHEDULED', color: 'bg-blue-500' };
+    }
+    return { label: 'FINAL', color: 'bg-green-600' };
+  };
+  
+  const status = getGameStatus();
 
   return (
-    <div className="relative w-72 h-56 cursor-pointer" onClick={() => setIsFlipped(!isFlipped)} style={{ perspective: '1000px' }}>
+    <div className="relative w-full max-w-sm mx-auto h-56 cursor-pointer touch-manipulation" onClick={() => setIsFlipped(!isFlipped)} style={{ perspective: '1000px' }}>
       {/* Card Container with 3D Flip Effect */}
       <div 
         className={`relative w-full h-full transition-transform duration-700 ${isFlipped ? 'rotate-y-180' : ''}`}
@@ -61,14 +118,14 @@ export default function GameCard({ game, league }) {
       >
         {/* Front of Card */}
         <div 
-          className={`absolute inset-0 ${style.bg} rounded-xl shadow-2xl border-2 ${style.accent} p-4 backface-hidden`}
+          className={`absolute inset-0 ${style.bg} rounded-xl shadow-2xl border-2 ${isFavoriteGame ? 'border-yellow-400 ring-2 ring-yellow-300' : style.accent} p-4 backface-hidden`}
           style={{ backfaceVisibility: 'hidden' }}
         >
-          {/* League Badge */}
+          {/* Game Status Badge */}
           <div className="absolute top-3 right-3">
-            {/* <span className={`px-3 py-1 rounded-full text-xs font-bold ${style.text} bg-black bg-opacity-30`}>
-              {league}
-            </span> */}
+            <span className={`px-3 py-1 rounded-full text-xs font-bold text-white ${status.color} shadow-lg`}>
+              {status.label}
+            </span>
           </div>
 
           {/* Date */}
@@ -84,8 +141,17 @@ export default function GameCard({ game, league }) {
           <div className="space-y-3">
             {/* Away Team */}
             <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-lg">
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={(e) => handleToggleFavorite(game.awayTeam, e)}
+                  className="hover:scale-125 transition-transform flex-shrink-0"
+                  title={awayIsFavorite ? "Remove from favorites" : "Add to favorites"}
+                >
+                  <span className={`text-lg ${awayIsFavorite ? 'text-yellow-300' : 'text-gray-400 opacity-50'}`}>
+                    ★
+                  </span>
+                </button>
+                <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-lg flex-shrink-0">
                   {game.awayTeamLogo && (
                     <img 
                       src={game.awayTeamLogo} 
@@ -102,7 +168,7 @@ export default function GameCard({ game, league }) {
                     </span>
                   )}
                 </div>
-                <span className={`font-bold ${style.text} ${isWinner(game.awayScore, game.homeScore) ? 'text-yellow-300' : ''} truncate max-w-32`}>
+                <span className={`font-bold ${style.text} ${isWinner(game.awayScore, game.homeScore) ? 'text-yellow-300' : ''} truncate`}>
                   {game.awayTeam}
                 </span>
               </div>
@@ -113,13 +179,22 @@ export default function GameCard({ game, league }) {
 
             {/* VS */}
             <div className="text-center">
-              <span className={`text-sm ${style.text} opacity-60`}>VS</span>
+              <span className={`text-sm ${style.text} opacity-60`}>AT</span>
             </div>
 
             {/* Home Team */}
             <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-lg">
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={(e) => handleToggleFavorite(game.homeTeam, e)}
+                  className="hover:scale-125 transition-transform flex-shrink-0"
+                  title={homeIsFavorite ? "Remove from favorites" : "Add to favorites"}
+                >
+                  <span className={`text-lg ${homeIsFavorite ? 'text-yellow-300' : 'text-gray-400 opacity-50'}`}>
+                    ★
+                  </span>
+                </button>
+                <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-lg flex-shrink-0">
                   {game.homeTeamLogo && (
                     <img 
                       src={game.homeTeamLogo} 
@@ -136,7 +211,7 @@ export default function GameCard({ game, league }) {
                     </span>
                   )}
                 </div>
-                <span className={`font-bold ${style.text} ${isWinner(game.homeScore, game.awayScore) ? 'text-yellow-300' : ''}`}>
+                <span className={`font-bold ${style.text} ${isWinner(game.homeScore, game.awayScore) ? 'text-yellow-300' : ''} truncate`}>
                   {game.homeTeam}
                 </span>
               </div>
@@ -153,6 +228,17 @@ export default function GameCard({ game, league }) {
             </span>
           </div> */}
 
+          {/* Share Button */}
+          {/* <button
+            onClick={handleShare}
+            className="absolute bottom-3 left-3 p-2 bg-white bg-opacity-20 hover:bg-opacity-30 rounded-full transition-all hover:scale-110"
+            title="Share game"
+          >
+            <svg className={`w-5 h-5 ${style.text}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+            </svg>
+          </button> */}
+          
           {/* Flip hint */}
           <div className="absolute bottom-3 right-6">
             <span className={`text-xs ${style.text} opacity-60`}>Click to flip</span>
