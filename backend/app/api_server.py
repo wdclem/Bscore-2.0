@@ -2,7 +2,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import sessionmaker
 from db.session import Base, engine
-from models import League, Team, Game
+from models import League, Team, Game, Standing
 from datetime import datetime
 import uvicorn
 import os
@@ -99,6 +99,54 @@ async def get_league_games(
                 "referee": g.referee,
             }
             result.append(game_data)
+        
+        return result
+
+@app.get("/api/leagues/{league_code}/standings")
+async def get_league_standings(league_code: str):
+    with SessionLocal() as session:
+        # Get league
+        league = session.query(League).filter(League.name == league_code).first()
+        if not league:
+            raise HTTPException(status_code=404, detail="League not found")
+        
+        # Get standings ordered by points/wins
+        standings = session.query(Standing).filter(Standing.league_id == league.id).all()
+        
+        # Sort based on league type
+        if league_code in ['NHL', 'PREMIER_LEAGUE']:
+            # Sort by points (descending)
+            standings.sort(key=lambda x: (x.points or 0, x.wins or 0), reverse=True)
+        else:
+            # Sort by win percentage (descending)
+            standings.sort(key=lambda x: (x.win_pct or 0, x.wins or 0), reverse=True)
+        
+        # Format response
+        result = []
+        for s in standings:
+            standing_data = {
+                "team_id": s.team_id,
+                "team_name": s.team.name,
+                "team_logo": s.team.logo_url,
+                "wins": s.wins,
+                "losses": s.losses,
+                "draws": s.draws,
+                "ot_losses": s.ot_losses,
+                "ties": s.ties,
+                "points": s.points,
+                "win_pct": s.win_pct,
+                "points_pct": s.points_pct,
+                "goals_for": s.goals_for,
+                "goals_against": s.goals_against,
+                "points_for": s.points_for,
+                "points_against": s.points_against,
+                "goal_diff": s.goal_diff,
+                "point_diff": s.point_diff,
+                "division": s.division,
+                "conference": s.conference,
+                "games_played": s.games_played,
+            }
+            result.append(standing_data)
         
         return result
 

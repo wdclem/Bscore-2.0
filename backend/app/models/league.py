@@ -11,6 +11,7 @@ class League(Base):
     teams = relationship("Team", back_populates="league")
     games = relationship("Game", back_populates="league")
     players = relationship("Player", back_populates="league")
+    standings = relationship("Standing", back_populates="league")
 
     def __repr__(self):
         return f"<League(id={self.id}, name='{self.name}')>"

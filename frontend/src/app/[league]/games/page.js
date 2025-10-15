@@ -6,6 +6,7 @@ import Header from "@/components/Header";
 import GameList from "@/components/GameList";
 import TeamPanel from "@/components/TeamPanel";
 import LeagueSwitcher from "@/components/LeagueSwitcher";
+import StandingsTable from "@/components/StandingsTable";
 import { getLeagueGames } from "@/lib/apiClient";
 import { useTheme } from '@theme/contexts/ThemeContext';
 
@@ -26,6 +27,7 @@ export default function LeagueGamesPage() {
   const [offset, setOffset] = useState(0);
   const [selectedTeam, setSelectedTeam] = useState(null);
   const [isPanelOpen, setIsPanelOpen] = useState(false);
+  const [showStandings, setShowStandings] = useState(false);
 
   // Get background and text colors based on theme
   const getBackgroundClass = () => {
@@ -123,6 +125,20 @@ export default function LeagueGamesPage() {
             </div>
             
             <div className="flex items-center gap-3 flex-wrap">
+              {/* Standings Toggle Button */}
+              <button
+                onClick={() => setShowStandings(!showStandings)}
+                className={`px-4 sm:px-6 py-3 ${showStandings ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-purple-600 hover:bg-purple-700'} text-white font-semibold rounded-lg transition-all flex items-center space-x-2 touch-manipulation`}
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+                <span className="hidden sm:inline">Standings</span>
+                <svg className={`w-4 h-4 transition-transform ${showStandings ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              
               {/* League Switcher */}
               <LeagueSwitcher currentLeague={code} />
               
@@ -147,6 +163,11 @@ export default function LeagueGamesPage() {
           )}
         </div>
 
+        {/* Collapsible Standings Table */}
+        <div className={`mb-8 overflow-hidden transition-all duration-500 ease-in-out ${showStandings ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0'}`}>
+          {showStandings && <StandingsTable leagueCode={code} />}
+        </div>
+        
         <GameList 
           games={games}
           loading={loading}
