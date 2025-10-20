@@ -3,5 +3,6 @@ beautifulsoup4
 SQLAlchemy>=2.0
 psycopg2-binary
 APScheduler
+pytz
 fastapi
 uvicorn

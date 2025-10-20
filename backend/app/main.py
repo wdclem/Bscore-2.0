@@ -5,6 +5,7 @@ from league_scrapper import fetch_nfl_data, fetch_nhl_data, fetch_nba_data, fetc
 from premier_league_scrapper import fetch_premier_league_data
 from models import League, Team, Game
 import argparse
+import pytz
 
 SessionLocal = sessionmaker(bind=engine)
 
@@ -65,7 +66,7 @@ def get_or_create_game(session, home_team_id: int, away_team_id: int, game_date:
     session.flush()
     return game
 
-def run_scrape():
+def run_scrape(leagues: list[str] = None):
     Base.metadata.create_all(bind=engine)
     LEAGUE_FETCHERS = {
         "NFL": fetch_nfl_data,
@@ -75,7 +76,12 @@ def run_scrape():
         "PREMIER_LEAGUE": fetch_premier_league_data,
     }
 
-    for league_name, fetcher in LEAGUE_FETCHERS.items():
+    if leagues:
+        target_items = [(name, LEAGUE_FETCHERS[name]) for name in leagues if name in LEAGUE_FETCHERS]
+    else:
+        target_items = list(LEAGUE_FETCHERS.items())
+
+    for league_name, fetcher in target_items:
         with SessionLocal() as session:
             print(f"\n Processing {league_name}...")
             games = fetcher()
@@ -143,15 +149,37 @@ def run_scrape():
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--once", action="store_true", help="Run scraper once and exit")
+    parser.add_argument("--league", action="append", help="Limit to specific league(s). Can be used multiple times.")
     args = parser.parse_args()
 
     if args.once:
-        run_scrape()
+        run_scrape(args.league)
     else:
         from apscheduler.schedulers.blocking import BlockingScheduler
-        scheduler = BlockingScheduler()
-        scheduler.add_job(run_scrape, "interval", hours=6, next_run_time=datetime.utcnow())
-        print("🕐 Scheduler started - running every 6 hours")
+        from apscheduler.triggers.cron import CronTrigger
+        
+        # Helsinki timezone
+        helsinki_tz = pytz.timezone('Europe/Helsinki')
+        
+        scheduler = BlockingScheduler(timezone=helsinki_tz)
+        
+        # US leagues in Helsinki morning (e.g., 06:00, 07:00, 08:00, 12:00)
+        scheduler.add_job(
+            run_scrape,
+            CronTrigger(hour='6,7,8,10,12', minute=0, timezone=helsinki_tz),
+            id='scraper_us_morning',
+            kwargs={"leagues": ["NFL", "NBA", "MLB", "NHL"]}
+        )
+
+        # Premier League in Helsinki evening (e.g., 18:00, 20:00)
+        scheduler.add_job(
+            run_scrape,
+            CronTrigger(hour='16,18,19,22,0,1', minute=0, timezone=helsinki_tz),
+            id='scraper_pl_evening',
+            kwargs={"leagues": ["PREMIER_LEAGUE"]}
+        )
+
+        print("🕐 Scheduler started - US leagues at 06/07/08/12, PL at 18/20 Helsinki time")
         scheduler.start()
 
 if __name__ == "__main__":
