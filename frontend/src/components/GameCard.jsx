@@ -17,11 +17,11 @@ export default function GameCard({ game, league }) {
     e.stopPropagation(); // Prevent card flip
     toggleFavoriteTeam(teamName);
     
-    // Update state
+    // Update state by re-reading from localStorage
     if (teamName === game.homeTeam) {
-      setHomeIsFavorite(!homeIsFavorite);
+      setHomeIsFavorite(isFavoriteTeam(teamName));
     } else {
-      setAwayIsFavorite(!awayIsFavorite);
+      setAwayIsFavorite(isFavoriteTeam(teamName));
     }
   };
   
@@ -99,7 +99,7 @@ export default function GameCard({ game, league }) {
   
   // Determine game status
   const getGameStatus = () => {
-    if (!game.homeScore && !game.awayScore) {
+    if (game.homeScore == null && game.awayScore == null) {
       return { label: 'SCHEDULED', color: 'bg-blue-500' };
     }
     return { label: 'FINAL', color: 'bg-green-600' };
