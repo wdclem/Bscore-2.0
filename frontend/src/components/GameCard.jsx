@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { isFavoriteTeam, toggleFavoriteTeam } from '@/lib/favorites';
+import TeamStatsTooltip from './TeamStatsTooltip';
 
 export default function GameCard({ game, league }) {
   const [isFlipped, setIsFlipped] = useState(false);
@@ -168,9 +169,11 @@ export default function GameCard({ game, league }) {
                     </span>
                   )}
                 </div>
-                <span className={`font-bold ${style.text} ${isWinner(game.awayScore, game.homeScore) ? 'text-yellow-300' : ''} truncate`}>
-                  {game.awayTeam}
-                </span>
+                <TeamStatsTooltip teamId={game.awayTeamId} teamName={game.awayTeam}>
+                  <span className={`font-bold ${style.text} ${isWinner(game.awayScore, game.homeScore) ? 'text-yellow-300' : ''} truncate cursor-pointer hover:underline`}>
+                    {game.awayTeam}
+                  </span>
+                </TeamStatsTooltip>
               </div>
               <span className={`text-2xl font-black ${style.text}`}>
                 {game.awayScore ?? "-"}
@@ -211,9 +214,11 @@ export default function GameCard({ game, league }) {
                     </span>
                   )}
                 </div>
-                <span className={`font-bold ${style.text} ${isWinner(game.homeScore, game.awayScore) ? 'text-yellow-300' : ''} truncate`}>
-                  {game.homeTeam}
-                </span>
+                <TeamStatsTooltip teamId={game.homeTeamId} teamName={game.homeTeam}>
+                  <span className={`font-bold ${style.text} ${isWinner(game.homeScore, game.awayScore) ? 'text-yellow-300' : ''} truncate cursor-pointer hover:underline`}>
+                    {game.homeTeam}
+                  </span>
+                </TeamStatsTooltip>
               </div>
               <span className={`text-2xl font-black ${style.text}`}>
                 {game.homeScore ?? "-"}
