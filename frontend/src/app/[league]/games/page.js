@@ -7,6 +7,11 @@ import GameList from "@/components/GameList";
 import TeamPanel from "@/components/TeamPanel";
 import LeagueSwitcher from "@/components/LeagueSwitcher";
 import StandingsTable from "@/components/StandingsTable";
+import TopScorers from "@/components/TopScorers";
+import AttendanceStats from "@/components/AttendanceStats";
+import ScoreDistribution from "@/components/ScoreDistribution";
+import HomeAwayStats from "@/components/HomeAwayStats";
+import PlayerStats from "@/components/PlayerStats";
 import { getLeagueGames } from "@/lib/apiClient";
 import { useTheme } from '@theme/contexts/ThemeContext';
 
@@ -28,6 +33,11 @@ export default function LeagueGamesPage() {
   const [selectedTeam, setSelectedTeam] = useState(null);
   const [isPanelOpen, setIsPanelOpen] = useState(false);
   const [showStandings, setShowStandings] = useState(false);
+  const [showTopScorers, setShowTopScorers] = useState(false);
+  const [showAttendanceStats, setShowAttendanceStats] = useState(false);
+  const [showScoreDistribution, setShowScoreDistribution] = useState(false);
+  const [showHomeAwayStats, setShowHomeAwayStats] = useState(false);
+  const [showPlayerStats, setShowPlayerStats] = useState(false);
 
   // Get background and text colors based on theme
   const getBackgroundClass = () => {
@@ -138,6 +148,78 @@ export default function LeagueGamesPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
               </button>
+
+              {/* Top Scorers Toggle Button */}
+              <button
+                onClick={() => setShowTopScorers(!showTopScorers)}
+                className={`px-4 sm:px-6 py-3 ${showTopScorers ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-orange-600 hover:bg-orange-700'} text-white font-semibold rounded-lg transition-all flex items-center space-x-2 touch-manipulation`}
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+                <span className="hidden sm:inline">Top Scorers</span>
+                <svg className={`w-4 h-4 transition-transform ${showTopScorers ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+
+              {/* Attendance Stats Toggle Button */}
+              <button
+                onClick={() => setShowAttendanceStats(!showAttendanceStats)}
+                className={`px-4 sm:px-6 py-3 ${showAttendanceStats ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-indigo-600 hover:bg-indigo-700'} text-white font-semibold rounded-lg transition-all flex items-center space-x-2 touch-manipulation`}
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+                <span className="hidden sm:inline">Attendance</span>
+                <svg className={`w-4 h-4 transition-transform ${showAttendanceStats ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+
+              {/* Score Distribution Toggle Button */}
+              <button
+                onClick={() => setShowScoreDistribution(!showScoreDistribution)}
+                className={`px-4 sm:px-6 py-3 ${showScoreDistribution ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-cyan-600 hover:bg-cyan-700'} text-white font-semibold rounded-lg transition-all flex items-center space-x-2 touch-manipulation`}
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+                <span className="hidden sm:inline">Score Chart</span>
+                <svg className={`w-4 h-4 transition-transform ${showScoreDistribution ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+
+              {/* Home/Away Stats Toggle Button */}
+              <button
+                onClick={() => setShowHomeAwayStats(!showHomeAwayStats)}
+                className={`px-4 sm:px-6 py-3 ${showHomeAwayStats ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-teal-600 hover:bg-teal-700'} text-white font-semibold rounded-lg transition-all flex items-center space-x-2 touch-manipulation`}
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 21v-4a2 2 0 012-2h4a2 2 0 012 2v4" />
+                </svg>
+                <span className="hidden sm:inline">Home/Away</span>
+                <svg className={`w-4 h-4 transition-transform ${showHomeAwayStats ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+
+
+              {/* Player Stats Toggle Button */}
+              <button
+                onClick={() => setShowPlayerStats(!showPlayerStats)}
+                className={`px-4 sm:px-6 py-3 ${showPlayerStats ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-violet-600 hover:bg-violet-700'} text-white font-semibold rounded-lg transition-all flex items-center space-x-2 touch-manipulation`}
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+                <span className="hidden sm:inline">Players</span>
+                <svg className={`w-4 h-4 transition-transform ${showPlayerStats ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
               
               {/* League Switcher */}
               <LeagueSwitcher currentLeague={code} />
@@ -166,6 +248,33 @@ export default function LeagueGamesPage() {
         {/* Collapsible Standings Table */}
         <div className={`mb-8 overflow-hidden transition-all duration-500 ease-in-out ${showStandings ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0'}`}>
           {showStandings && <StandingsTable leagueCode={code} />}
+        </div>
+
+        {/* Collapsible Top Scorers */}
+        <div className={`mb-8 overflow-hidden transition-all duration-500 ease-in-out ${showTopScorers ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0'}`}>
+          {showTopScorers && <TopScorers leagueCode={code} />}
+        </div>
+
+        {/* Collapsible Attendance Stats */}
+        <div className={`mb-8 overflow-hidden transition-all duration-500 ease-in-out ${showAttendanceStats ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0'}`}>
+          {showAttendanceStats && <AttendanceStats leagueCode={code} />}
+        </div>
+
+        {/* Collapsible Score Distribution */}
+        <div className={`mb-8 overflow-hidden transition-all duration-500 ease-in-out ${showScoreDistribution ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0'}`}>
+          {showScoreDistribution && <ScoreDistribution leagueCode={code} />}
+        </div>
+
+        {/* Collapsible Home/Away Stats */}
+        <div className={`mb-8 overflow-hidden transition-all duration-500 ease-in-out ${showHomeAwayStats ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0'}`}>
+          {showHomeAwayStats && <HomeAwayStats leagueCode={code} />}
+        </div>
+
+        {/* Collapsible Venue Stats */}
+
+        {/* Collapsible Player Stats */}
+        <div className={`mb-8 overflow-hidden transition-all duration-500 ease-in-out ${showPlayerStats ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0'}`}>
+          {showPlayerStats && <PlayerStats leagueCode={code} />}
         </div>
         
         <GameList 
