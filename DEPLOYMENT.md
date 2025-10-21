@@ -36,11 +36,23 @@ pip install fastapi uvicorn sqlalchemy psycopg2-binary requests beautifulsoup4 a
 
 ## 📦 Part 2: Setup Backend
 
-### Step 1: Clone your repository
+### Step 1: Transfer project folder
+
+**Option A: Transfer entire project (RECOMMENDED)**
+```bash
+# On your local machine, create a production copy
+cp -r /path/to/Bscore-2.0 ~/Bscore-2.0-production
+
+# Transfer to your phone via USB, cloud storage, or email
+# Then on your phone:
+cd ~/Bscore-2.0-production
+```
+
+**Option B: Clone from repository**
 ```bash
 cd ~
 git clone YOUR_GITHUB_REPO_URL Bscore-2.0
-cd Bscore-2.0/backend
+cd Bscore-2.0
 ```
 
 ### Step 2: Setup PostgreSQL
@@ -53,6 +65,24 @@ pg_ctl -D $HOME/postgres_data -l logfile start
 
 # Create database
 createdb nhl_db
+```
+
+### Step 2.5: Import Database (Recommended)
+
+**Option A: Import from your local machine (FASTER)**
+```bash
+# On your local machine, export the database
+docker exec bscore-20-db-1 pg_dump -U postgres nhl_db > better_score_db.sql
+
+# Transfer to your phone (via USB, cloud storage, or email)
+# Then on your phone:
+psql -U postgres -d nhl_db < better_score_db.sql
+```
+
+**Option B: Run scraper on phone (slower, uses more data)**
+```bash
+# Skip this if you imported the database above
+python app/main.py --once
 ```
 
 ### Step 3: Configure environment
