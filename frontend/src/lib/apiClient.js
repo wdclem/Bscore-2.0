@@ -27,4 +27,44 @@ export async function getLeagueTeams(leagueCode) {
   return getJson(`/api/leagues/${leagueCode}/teams`);
 }
 
+// Get team statistics
+export async function getTeamStats(teamId) {
+  return getJson(`/api/teams/${teamId}/stats`);
+}
+
+// Get league standings
+export async function getLeagueStandings(leagueCode) {
+  return getJson(`/api/leagues/${leagueCode}/standings`);
+}
+
+// Get top scorers for a league
+export async function getTopScorers(leagueCode, limit = 10) {
+  return getJson(`/api/leagues/${leagueCode}/top-scorers?limit=${limit}`);
+}
+
+// Get attendance statistics for a league
+export async function getAttendanceStats(leagueCode) {
+  return getJson(`/api/leagues/${leagueCode}/attendance-stats`);
+}
+
+// Get score distribution for a league
+export async function getScoreDistribution(leagueCode) {
+  return getJson(`/api/leagues/${leagueCode}/score-distribution`);
+}
+
+// Get home vs away statistics for a league
+export async function getHomeAwayStats(leagueCode) {
+  return getJson(`/api/leagues/${leagueCode}/home-away-stats`);
+}
+
+// Get venue statistics for a league
+export async function getVenueStats(leagueCode) {
+  return getJson(`/api/leagues/${leagueCode}/venue-stats`);
+}
+
+// Get player statistics for a league
+export async function getPlayerStats(leagueCode, statType = 'scoring', limit = 20) {
+  return getJson(`/api/leagues/${leagueCode}/player-stats?stat_type=${statType}&limit=${limit}`);
+}
+
 
