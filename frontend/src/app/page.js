@@ -15,7 +15,6 @@ export default function Home() {
     { code: 'nfl', name: 'NFL', icon: '🏈', description: 'National Football League' },
     { code: 'nhl', name: 'NHL', icon: '🏒', description: 'National Hockey League' },
     { code: 'nba', name: 'NBA', icon: '🏀', description: 'National Basketball Association' },
-    { code: 'mlb', name: 'MLB', icon: '⚾', description: 'Major League Baseball' },
     { code: 'premier_league', name: 'Premier League', icon: '⚽', description: 'English Premier League' }
   ];
 

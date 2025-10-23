@@ -214,6 +214,15 @@ Bscore-2.0/
 - [ ] Home vs Away statistics
 - [ ] Venue statistics
 
+### ⚡ Performance Optimizations (TODO)
+- [ ] **Component Separation**: Move statistical components to dedicated pages
+  - `/leagues/[league]/standings` - Standings table only
+  - `/leagues/[league]/stats` - All statistical components  
+  - `/leagues/[league]/players` - Player statistics only
+  - `/leagues/[league]/attendance` - Attendance and venue stats
+- [ ] **Benefits**: Faster initial load (1-2s), better SEO, improved mobile UX
+- [ ] **Current**: Lazy loading with `dynamic()` imports (8.7s → 1.4s improvement)
+
 ### 🎪 Dream Features
 - [ ] Player statistics and profiles
 - [ ] Game details modal with lineups

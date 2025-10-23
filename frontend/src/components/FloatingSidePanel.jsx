@@ -25,11 +25,6 @@ function FloatingSidePanel() {
       label: 'NBA Games',
     },
     { 
-      href: '/mlb/games', 
-      icon: '⚾', 
-      label: 'MLB Games',
-    },
-    { 
       href: '/premier_league/games', 
       icon: '⚽', 
       label: 'Premier League',

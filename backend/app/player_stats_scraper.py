@@ -41,8 +41,8 @@ def make_request_with_retry(url, headers, max_retries=3):
 
 def scrape_nhl_player_stats(stat_type='scoring', limit=20):
     """
-    Scrape NHL player stats from leaders page
-    stat_type: 'scoring', 'goals', 'assists', 'points'
+    Scrape NHL player stats from leaders page - BBC style approach
+    Scrape each section independently and combine data
     """
     url = f"https://www.hockey-reference.com/leagues/NHL_2026_leaders.html"
     
@@ -58,66 +58,83 @@ def scrape_nhl_player_stats(stat_type='scoring', limit=20):
         
         soup = BeautifulSoup(response.content, 'html.parser')
         
-        players = []
+        # Helper function to scrape a leaders section
+        def scrape_leaders_section(section_id, stat_name, limit):
+            players = []
+            section = soup.find('div', id=section_id)
+            if section:
+                table = section.find('table')
+                if table:
+                    rows = table.find_all('tr')[1:limit+1]  # Skip header row
+                    
+                    for row in rows:
+                        cells = row.find_all('td')
+                        if len(cells) >= 3:
+                            player_cell = cells[1]
+                            player_link = player_cell.find('a')
+                            if player_link:
+                                player_name = player_link.text.strip()
+                                # Extract team from the span with class 'desc'
+                                team_span = player_cell.find('span', class_='desc')
+                                team = team_span.text.strip() if team_span else 'Unknown'
+                                stat_value = int(cells[2].text.strip()) if cells[2].text.strip().isdigit() else 0
+                                
+                                players.append({
+                                    'name': player_name,
+                                    'team': team,
+                                    'position': 'F',  # Default position
+                                    stat_name: stat_value
+                                })
+            return players
         
-        # Look for the goals leaders section
-        goals_section = soup.find('div', id='leaders_goals')
-        if goals_section:
-            # Find the table within the goals section
-            table = goals_section.find('table')
-            if table:
-                rows = table.find_all('tr')[1:limit+1]  # Skip header row
-                
-                for row in rows:
-                    cells = row.find_all('td')
-                    if len(cells) >= 3:
-                        rank = cells[0].text.strip()
-                        player_cell = cells[1]
-                        player_link = player_cell.find('a')
-                        if player_link:
-                            player_name = player_link.text.strip()
-                            # Extract team from the span with class 'desc'
-                            team_span = player_cell.find('span', class_='desc')
-                            team = team_span.text.strip() if team_span else 'Unknown'
-                            goals = int(cells[2].text.strip()) if cells[2].text.strip().isdigit() else 0
-                            
-                            players.append({
-                                'name': player_name,
-                                'team': team,
-                                'position': 'F',  # Default position
-                                'goals': goals,
-                                'assists': 0,  # Will be filled from assists section
-                                'points': 0   # Will be filled from points section
-                            })
+        # Scrape each section independently
+        goals_players = scrape_leaders_section('leaders_goals', 'goals', limit)
+        assists_players = scrape_leaders_section('leaders_assists', 'assists', limit)
+        points_players = scrape_leaders_section('leaders_points', 'points', limit)
         
-        # Look for assists leaders
-        assists_section = soup.find('div', id='leaders_assists')
-        if assists_section:
-            table = assists_section.find('table')
-            if table:
-                rows = table.find_all('tr')[1:limit+1]
-                
-                for i, row in enumerate(rows):
-                    cells = row.find_all('td')
-                    if len(cells) >= 3 and i < len(players):
-                        assists = int(cells[2].text.strip()) if cells[2].text.strip().isdigit() else 0
-                        players[i]['assists'] = assists
+        print(f"📊 Scraped sections: {len(goals_players)} goals, {len(assists_players)} assists, {len(points_players)} points")
         
-        # Look for points leaders
-        points_section = soup.find('div', id='leaders_points')
-        if points_section:
-            table = points_section.find('table')
-            if table:
-                rows = table.find_all('tr')[1:limit+1]
-                
-                for i, row in enumerate(rows):
-                    cells = row.find_all('td')
-                    if len(cells) >= 3 and i < len(players):
-                        points = int(cells[2].text.strip()) if cells[2].text.strip().isdigit() else 0
-                        players[i]['points'] = points
+        # Start with points leaders (the best overall players)
+        all_players = {}
         
-        print(f"✅ Scraped {len(players)} NHL player stats from leaders page")
-        return players[:limit]
+        # Helper function to add/update player stats
+        def add_player_stats(player_data, stat_name):
+            name = player_data['name']
+            if name not in all_players:
+                all_players[name] = {
+                    'name': name,
+                    'team': player_data['team'],
+                    'position': 'F',
+                    'goals': 0,
+                    'assists': 0,
+                    'points': 0
+                }
+            all_players[name][stat_name] = player_data[stat_name]
+        
+        # Start with points leaders (our base)
+        for player in points_players:
+            add_player_stats(player, 'points')
+        
+        # Create lookup dictionaries for goals and assists
+        goals_lookup = {p['name']: p['goals'] for p in goals_players}
+        assists_lookup = {p['name']: p['assists'] for p in assists_players}
+        
+        # Fill in goals and assists for our points leaders
+        for name, player in all_players.items():
+            if name in goals_lookup:
+                player['goals'] = goals_lookup[name]
+            if name in assists_lookup:
+                player['assists'] = assists_lookup[name]
+            
+            # Calculate points = goals + assists (don't trust scraped points)
+            player['points'] = player['goals'] + player['assists']
+        
+        # Convert to list and sort by calculated points
+        players_list = list(all_players.values())
+        players_list.sort(key=lambda x: x['points'], reverse=True)
+        
+        print(f"✅ Scraped {len(players_list)} NHL players with complete stats")
+        return players_list[:limit]
         
     except Exception as e:
         print(f"❌ Error scraping NHL player stats: {e}")
@@ -127,79 +144,12 @@ def scrape_nhl_player_stats(stat_type='scoring', limit=20):
 def scrape_premier_league_player_stats(stat_type='scoring', limit=20):
     """
     Scrape Premier League player stats
-    stat_type: 'scoring', 'passing', 'defense'
+    Note: FBRef Premier League page only shows team stats, not individual player stats
+    This function returns empty to trigger fallback to mock data
     """
-    url = "https://fbref.com/en/comps/9/Premier-League-Stats"
-    
-    headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-    }
-    
-    try:
-        response = make_request_with_retry(url, headers)
-        if not response:
-            print("❌ Failed to get Premier League data after retries")
-            return []
-        
-        soup = BeautifulSoup(response.content, 'html.parser')
-        
-        # Find the stats table (standard stats)
-        table = soup.find('table', id=lambda x: x and 'stats_standard' in x.lower())
-        
-        if not table:
-            print("❌ Could not find Premier League stats table")
-            return []
-        
-        players = []
-        rows = table.find('tbody').find_all('tr', limit=limit * 2)  # Get more rows to account for filtering
-        
-        count = 0
-        for row in rows:
-            if count >= limit:
-                break
-                
-            # Skip separator rows
-            if row.find('th', class_='over_header'):
-                continue
-            
-            player_cell = row.find('th', {'data-stat': 'player'}) or row.find('td', {'data-stat': 'player'})
-            if not player_cell:
-                continue
-            
-            player_link = player_cell.find('a')
-            if not player_link:
-                continue
-            
-            player_name = player_link.text.strip()
-            
-            # Extract stats
-            stats = {}
-            for td in row.find_all('td'):
-                stat_name = td.get('data-stat')
-                if stat_name:
-                    stats[stat_name] = td.text.strip()
-            
-            player_data = {
-                'name': player_name,
-                'team': stats.get('team', ''),
-                'position': stats.get('position', ''),
-                'games_played': int(stats.get('games', 0) or 0),
-                'goals': int(stats.get('goals', 0) or 0),
-                'assists': int(stats.get('assists', 0) or 0),
-                'penalty_kicks': int(stats.get('pens_made', 0) or 0),
-                'yellow_cards': int(stats.get('cards_yellow', 0) or 0),
-                'red_cards': int(stats.get('cards_red', 0) or 0),
-            }
-            
-            players.append(player_data)
-            count += 1
-        
-        print(f"✅ Scraped {len(players)} Premier League player stats")
-        return players
-        
-    except Exception as e:
-        print(f"❌ Error scraping Premier League player stats: {e}")
-        return []
+    print("⚠️ Premier League individual player stats not available on FBRef")
+    print("⚠️ Using fallback mock data for Premier League")
+    return []
 
 
 def scrape_nfl_player_stats(stat_type='passing', limit=20):

@@ -67,12 +67,6 @@ export default function GameCard({ game, league }) {
           accent: 'border-purple-400',
           text: 'text-purple-100'
         };
-      case 'MLB':
-        return {
-          bg: 'bg-gradient-to-br from-blue-600 to-blue-800',
-          accent: 'border-blue-400',
-          text: 'text-blue-100'
-        };
       case 'NHL':
         return {
           bg: 'bg-gradient-to-br from-gray-700 to-gray-900',

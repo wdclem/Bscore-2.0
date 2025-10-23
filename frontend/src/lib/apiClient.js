@@ -57,10 +57,6 @@ export async function getHomeAwayStats(leagueCode) {
   return getJson(`/api/leagues/${leagueCode}/home-away-stats`);
 }
 
-// Get venue statistics for a league
-export async function getVenueStats(leagueCode) {
-  return getJson(`/api/leagues/${leagueCode}/venue-stats`);
-}
 
 // Get player statistics for a league
 export async function getPlayerStats(leagueCode, statType = 'scoring', limit = 20) {

@@ -2,14 +2,14 @@
 
 import { useState, useEffect } from 'react';
 import { getTopScorers } from '@/lib/apiClient';
+import useLoadingState from '@/hooks/useLoadingState';
 import { useTheme } from '@theme/contexts/ThemeContext';
 import { getThemeClasses } from '@theme/config/themes';
 import { getTextColors } from '@/lib/themeColors';
 
 export default function TopScorers({ leagueCode }) {
   const [scorers, setScorers] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const { isLoading, error, startLoading, stopLoading, setLoadingError } = useLoadingState();
   const { theme } = useTheme();
   const themeClasses = getThemeClasses(theme);
   const textColors = getTextColors(theme);
@@ -17,21 +17,20 @@ export default function TopScorers({ leagueCode }) {
   useEffect(() => {
     async function fetchTopScorers() {
       try {
-        setLoading(true);
+        startLoading();
         const data = await getTopScorers(leagueCode, 10);
         setScorers(data);
-        setError(null);
       } catch (err) {
         console.error("Failed to fetch top scorers:", err);
-        setError("Failed to load top scorers. Please try again later.");
+        setLoadingError("Failed to load top scorers. Please try again later.");
       } finally {
-        setLoading(false);
+        stopLoading();
       }
     }
     fetchTopScorers();
-  }, [leagueCode]);
+  }, [leagueCode, startLoading, stopLoading, setLoadingError]);
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className={`p-6 rounded-xl ${themeClasses.surface} ${themeClasses.shadow}`}>
         <div className="animate-pulse space-y-4">

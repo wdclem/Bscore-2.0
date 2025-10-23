@@ -3,7 +3,7 @@ from db.session import Base, engine
 from sqlalchemy.orm import sessionmaker
 from league_scrapper import fetch_nfl_data, fetch_nhl_data, fetch_nba_data, fetch_mlb_data
 from premier_league_scrapper import fetch_premier_league_data
-from models import League, Team, Game
+from models import League, Team, Game, Player, PlayerStats
 import argparse
 import pytz
 
@@ -65,6 +65,84 @@ def get_or_create_game(session, home_team_id: int, away_team_id: int, game_date:
     session.add(game)
     session.flush()
     return game
+
+def get_or_create_player(session, name: str, team_id: int, league_id: int) -> Player:
+    """Get or create a player"""
+    player = session.query(Player).filter(
+        Player.name == name,
+        Player.team_id == team_id,
+        Player.league_id == league_id
+    ).first()
+    
+    if player:
+        return player
+    
+    player = Player(
+        name=name,
+        team_id=team_id,
+        league_id=league_id
+    )
+    session.add(player)
+    session.flush()
+    return player
+
+def save_player_stats(session, league_id: int, season: str, stat_type: str, stats_data: list):
+    """Save player stats to database"""
+    from player_stats_scraper import (
+        scrape_nhl_player_stats,
+        scrape_premier_league_player_stats,
+        scrape_nfl_player_stats,
+        scrape_nba_player_stats
+    )
+    
+    print(f"🔄 Saving {stat_type} stats for league {league_id}, season {season}")
+    
+    # Get the league name
+    league = session.query(League).filter(League.id == league_id).first()
+    if not league:
+        print(f"❌ League with id {league_id} not found")
+        return
+    
+    # Clear existing stats for this league/season/stat_type
+    session.query(PlayerStats).filter(
+        PlayerStats.league_id == league_id,
+        PlayerStats.season == season,
+        PlayerStats.stat_type == stat_type
+    ).delete()
+    
+    saved_count = 0
+    for stat in stats_data:
+        # Get or create player
+        player = get_or_create_player(session, stat['name'], stat.get('team_id', 1), league_id)
+        
+        # Create player stats record
+        player_stat = PlayerStats(
+            player_id=player.id,
+            league_id=league_id,
+            season=season,
+            stat_type=stat_type,
+            goals=stat.get('goals', 0),
+            assists=stat.get('assists', 0),
+            points=stat.get('points', 0),
+            pass_yards=stat.get('pass_yards', 0),
+            pass_touchdowns=stat.get('pass_touchdowns', 0),
+            interceptions=stat.get('interceptions', 0),
+            rush_yards=stat.get('rush_yards', 0),
+            rush_touchdowns=stat.get('rush_touchdowns', 0),
+            receiving_yards=stat.get('receiving_yards', 0),
+            receiving_touchdowns=stat.get('receiving_touchdowns', 0),
+            points_per_game=stat.get('points_per_game', 0.0),
+            rebounds_per_game=stat.get('rebounds_per_game', 0.0),
+            assists_per_game=stat.get('assists_per_game', 0.0),
+            created_at=datetime.now(),
+            updated_at=datetime.now()
+        )
+        
+        session.add(player_stat)
+        saved_count += 1
+    
+    session.commit()
+    print(f"✅ Saved {saved_count} player stats for {league.name}")
 
 def run_scrape(leagues: list[str] = None):
     Base.metadata.create_all(bind=engine)
@@ -146,6 +224,55 @@ def run_scrape(leagues: list[str] = None):
     
     print("\n🎉 Scraping complete!")
 
+def run_player_stats_scrape():
+    """Run player stats scraping for all leagues"""
+    from datetime import datetime
+    
+    print("\n🔄 Starting player stats scraping...")
+    current_year = datetime.now().year
+    season = f"{current_year}-{current_year + 1}"
+    
+    with SessionLocal() as session:
+        # Get all leagues
+        leagues = session.query(League).all()
+        
+        for league in leagues:
+            print(f"\n📊 Scraping player stats for {league.name}...")
+            
+            try:
+                if league.name == "NHL":
+                    from player_stats_scraper import scrape_nhl_player_stats
+                    stats_data = scrape_nhl_player_stats('scoring', 20)
+                    if stats_data:
+                        save_player_stats(session, league.id, season, 'scoring', stats_data)
+                
+                elif league.name == "PREMIER_LEAGUE":
+                    from player_stats_scraper import scrape_premier_league_player_stats
+                    stats_data = scrape_premier_league_player_stats('scoring', 20)
+                    if stats_data:
+                        save_player_stats(session, league.id, season, 'scoring', stats_data)
+                
+                elif league.name == "NFL":
+                    from player_stats_scraper import scrape_nfl_player_stats
+                    # Scrape passing stats for NFL
+                    stats_data = scrape_nfl_player_stats('passing', 20)
+                    if stats_data:
+                        save_player_stats(session, league.id, season, 'passing', stats_data)
+                
+                elif league.name == "NBA":
+                    from player_stats_scraper import scrape_nba_player_stats
+                    stats_data = scrape_nba_player_stats(20)
+                    if stats_data:
+                        save_player_stats(session, league.id, season, 'basketball', stats_data)
+                
+                print(f"✅ {league.name} player stats updated")
+                
+            except Exception as e:
+                print(f"❌ Error scraping {league.name} player stats: {e}")
+                continue
+    
+    print("\n🎉 Player stats scraping complete!")
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--once", action="store_true", help="Run scraper once and exit")
@@ -168,7 +295,7 @@ def main():
             run_scrape,
             CronTrigger(hour='6,7,8,10,12', minute=0, timezone=helsinki_tz),
             id='scraper_us_morning',
-            kwargs={"leagues": ["NFL", "NBA", "MLB", "NHL"]}
+            kwargs={"leagues": ["NFL", "NBA", "NHL"]}  # MLB deactivated
         )
 
         # Premier League in Helsinki evening (e.g., 18:00, 20:00)
@@ -179,7 +306,15 @@ def main():
             kwargs={"leagues": ["PREMIER_LEAGUE"]}
         )
 
-        print("🕐 Scheduler started - US leagues at 06/07/08/12, PL at 18/20 Helsinki time")
+        # Player stats scraping - twice daily at midnight and 10 AM Helsinki time
+        scheduler.add_job(
+            run_player_stats_scrape,
+            CronTrigger(hour='0,10', minute=0, timezone=helsinki_tz),
+            id='scraper_player_stats',
+            kwargs={}
+        )
+
+        print("🕐 Scheduler started - US leagues at 06/07/08/12, PL at 18/20, Player stats at 00/10 Helsinki time")
         scheduler.start()
 
 if __name__ == "__main__":

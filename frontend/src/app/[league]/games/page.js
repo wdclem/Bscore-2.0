@@ -6,12 +6,27 @@ import Header from "@/components/Header";
 import GameList from "@/components/GameList";
 import TeamPanel from "@/components/TeamPanel";
 import LeagueSwitcher from "@/components/LeagueSwitcher";
-import StandingsTable from "@/components/StandingsTable";
-import TopScorers from "@/components/TopScorers";
-import AttendanceStats from "@/components/AttendanceStats";
-import ScoreDistribution from "@/components/ScoreDistribution";
-import HomeAwayStats from "@/components/HomeAwayStats";
-import PlayerStats from "@/components/PlayerStats";
+import dynamic from 'next/dynamic';
+
+// Lazy load statistical components
+const StandingsTable = dynamic(() => import("@/components/StandingsTable"), {
+  loading: () => <div className="animate-pulse h-64 bg-gray-200 rounded"></div>
+});
+const TopScorers = dynamic(() => import("@/components/TopScorers"), {
+  loading: () => <div className="animate-pulse h-64 bg-gray-200 rounded"></div>
+});
+const AttendanceStats = dynamic(() => import("@/components/AttendanceStats"), {
+  loading: () => <div className="animate-pulse h-64 bg-gray-200 rounded"></div>
+});
+const ScoreDistribution = dynamic(() => import("@/components/ScoreDistribution"), {
+  loading: () => <div className="animate-pulse h-64 bg-gray-200 rounded"></div>
+});
+const HomeAwayStats = dynamic(() => import("@/components/HomeAwayStats"), {
+  loading: () => <div className="animate-pulse h-64 bg-gray-200 rounded"></div>
+});
+const PlayerStats = dynamic(() => import("@/components/PlayerStats"), {
+  loading: () => <div className="animate-pulse h-64 bg-gray-200 rounded"></div>
+});
 import { getLeagueGames } from "@/lib/apiClient";
 import { useTheme } from '@theme/contexts/ThemeContext';
 

@@ -218,20 +218,53 @@ async def get_top_scorers(league_code: str, limit: int = 10):
         if not league:
             raise HTTPException(status_code=404, detail="League not found")
         
-        # Import scrapers
-        from player_stats_scraper import (
-            scrape_nhl_player_stats,
-            scrape_premier_league_player_stats,
-            scrape_nfl_player_stats,
-            scrape_nba_player_stats
-        )
+        # Get current season
+        from datetime import datetime
+        current_year = datetime.now().year
+        season = f"{current_year}-{current_year + 1}"
         
-        # Call the appropriate scraper with fallback to mock data
-        try:
+        # Try to get data from database first
+        from models import PlayerStats, Player
+        player_stats = session.query(PlayerStats).filter(
+            PlayerStats.league_id == league.id,
+            PlayerStats.season == season,
+            PlayerStats.stat_type == 'scoring'
+        ).join(Player).order_by(PlayerStats.points.desc()).limit(limit).all()
+        
+        if player_stats:
+            # Serve from database
+            players = []
+            for stat in player_stats:
+                player_data = {
+                    "name": stat.player.name,
+                    "team": stat.player.team.name if stat.player.team else "Unknown",
+                    "position": "F",  # Default position
+                    "goals": stat.goals,
+                    "assists": stat.assists,
+                    "points": stat.points
+                }
+                players.append(player_data)
+            
+            print(f"✅ Served {len(players)} {league_code} top scorers from database")
+        else:
+            # Fallback to mock data if no database data
+            print(f"⚠️ No database data for {league_code}, using fallback data")
             if league_code == "NHL":
-                players = scrape_nhl_player_stats('scoring', limit)
+                players = [
+                    {"name": "Connor McDavid", "team": "EDM", "position": "C", "goals": 12, "assists": 18, "points": 30},
+                    {"name": "Leon Draisaitl", "team": "EDM", "position": "C", "goals": 8, "assists": 15, "points": 23},
+                    {"name": "Nathan MacKinnon", "team": "COL", "position": "C", "goals": 10, "assists": 12, "points": 22},
+                    {"name": "Artemi Panarin", "team": "NYR", "position": "LW", "goals": 9, "assists": 14, "points": 23},
+                    {"name": "David Pastrnak", "team": "BOS", "position": "RW", "goals": 11, "assists": 8, "points": 19}
+                ]
             elif league_code == "PREMIER_LEAGUE":
-                players = scrape_premier_league_player_stats('scoring', limit)
+                players = [
+                    {"name": "Erling Haaland", "team": "Manchester City", "position": "F", "goals": 8, "assists": 2, "points": 10},
+                    {"name": "Mohamed Salah", "team": "Liverpool", "position": "F", "goals": 6, "assists": 4, "points": 10},
+                    {"name": "Ollie Watkins", "team": "Aston Villa", "position": "F", "goals": 7, "assists": 1, "points": 8},
+                    {"name": "Son Heung-min", "team": "Tottenham", "position": "F", "goals": 5, "assists": 3, "points": 8},
+                    {"name": "Bukayo Saka", "team": "Arsenal", "position": "F", "goals": 4, "assists": 2, "points": 6}
+                ]
             elif league_code == "NFL":
                 # NFL doesn't have individual goal scorers, return empty
                 players = []
@@ -240,29 +273,6 @@ async def get_top_scorers(league_code: str, limit: int = 10):
                 players = []
             else:
                 players = []
-            
-            # If scraper returns empty data, use fallback mock data
-            if not players:
-                print(f"⚠️ Scraper returned empty data for {league_code}, using fallback data")
-                if league_code == "NHL":
-                    players = [
-                        {"name": "Connor McDavid", "team": "EDM", "position": "C", "goals": 12, "assists": 18, "points": 30},
-                        {"name": "Leon Draisaitl", "team": "EDM", "position": "C", "goals": 8, "assists": 15, "points": 23},
-                        {"name": "Nathan MacKinnon", "team": "COL", "position": "C", "goals": 10, "assists": 12, "points": 22},
-                        {"name": "Artemi Panarin", "team": "NYR", "position": "LW", "goals": 9, "assists": 14, "points": 23},
-                        {"name": "David Pastrnak", "team": "BOS", "position": "RW", "goals": 11, "assists": 8, "points": 19}
-                    ]
-                elif league_code == "PREMIER_LEAGUE":
-                    players = [
-                        {"name": "Erling Haaland", "team": "Manchester City", "position": "F", "goals": 8, "assists": 2, "points": 10},
-                        {"name": "Mohamed Salah", "team": "Liverpool", "position": "F", "goals": 6, "assists": 4, "points": 10},
-                        {"name": "Ollie Watkins", "team": "Aston Villa", "position": "F", "goals": 7, "assists": 1, "points": 8},
-                        {"name": "Son Heung-min", "team": "Tottenham", "position": "F", "goals": 5, "assists": 3, "points": 8},
-                        {"name": "Bukayo Saka", "team": "Arsenal", "position": "F", "goals": 4, "assists": 2, "points": 6}
-                    ]
-        except Exception as e:
-            print(f"❌ Error calling scraper for {league_code}: {e}")
-            players = []
         
         # Sort by goals and return top N
         players.sort(key=lambda x: x.get("goals", 0), reverse=True)
@@ -464,52 +474,6 @@ async def get_home_away_stats(league_code: str):
             "draw_percentage": draw_pct
         }
 
-@app.get("/api/leagues/{league_code}/venue-stats")
-async def get_venue_stats(league_code: str):
-    with SessionLocal() as session:
-        # Get league
-        league = session.query(League).filter(League.name == league_code).first()
-        if not league:
-            raise HTTPException(status_code=404, detail="League not found")
-        
-        # Get all games with venue data
-        games = session.query(Game).filter(
-            Game.league_id == league.id,
-            Game.venue.isnot(None),
-            Game.venue != ""
-        ).all()
-        
-        if not games:
-            return {
-                "total_games": 0,
-                "venues": [],
-                "most_used_venue": None,
-                "total_unique_venues": 0
-            }
-        
-        # Count games by venue
-        venue_counts = {}
-        for game in games:
-            venue = game.venue.strip()
-            if venue:
-                venue_counts[venue] = venue_counts.get(venue, 0) + 1
-        
-        # Convert to list and sort by frequency
-        venues = [
-            {"venue": venue, "games": count, "percentage": round((count / len(games)) * 100, 1)}
-            for venue, count in venue_counts.items()
-        ]
-        venues.sort(key=lambda x: x["games"], reverse=True)
-        
-        # Find most used venue
-        most_used_venue = venues[0]["venue"] if venues else None
-        
-        return {
-            "total_games": len(games),
-            "venues": venues,
-            "most_used_venue": most_used_venue,
-            "total_unique_venues": len(venues)
-        }
 
 @app.get("/api/leagues/{league_code}/player-stats")
 async def get_player_stats(league_code: str, stat_type: str = "scoring", limit: int = 20):
@@ -519,65 +483,99 @@ async def get_player_stats(league_code: str, stat_type: str = "scoring", limit: 
         if not league:
             raise HTTPException(status_code=404, detail="League not found")
         
-        # Import scrapers
-        from player_stats_scraper import (
-            scrape_nhl_player_stats,
-            scrape_premier_league_player_stats,
-            scrape_nfl_player_stats,
-            scrape_nba_player_stats
-        )
+        # Get current season
+        from datetime import datetime
+        current_year = datetime.now().year
+        season = f"{current_year}-{current_year + 1}"
         
-        # Call the appropriate scraper with fallback to mock data
-        try:
+        # Try to get data from database first
+        from models import PlayerStats, Player
+        player_stats = session.query(PlayerStats).filter(
+            PlayerStats.league_id == league.id,
+            PlayerStats.season == season,
+            PlayerStats.stat_type == stat_type
+        ).join(Player).limit(limit).all()
+        
+        if player_stats:
+            # Serve from database
+            players = []
+            for stat in player_stats:
+                player_data = {
+                    "name": stat.player.name,
+                    "team": stat.player.team.name if stat.player.team else "Unknown",
+                    "position": "F",  # Default position
+                }
+                
+                # Add stats based on stat_type
+                if stat_type == "scoring":
+                    player_data.update({
+                        "goals": stat.goals,
+                        "assists": stat.assists,
+                        "points": stat.points
+                    })
+                elif stat_type == "passing":
+                    player_data.update({
+                        "pass_yards": stat.pass_yards,
+                        "pass_touchdowns": stat.pass_touchdowns,
+                        "interceptions": stat.interceptions
+                    })
+                elif stat_type == "rushing":
+                    player_data.update({
+                        "rush_yards": stat.rush_yards,
+                        "rush_touchdowns": stat.rush_touchdowns
+                    })
+                elif stat_type == "receiving":
+                    player_data.update({
+                        "receiving_yards": stat.receiving_yards,
+                        "receiving_touchdowns": stat.receiving_touchdowns
+                    })
+                elif stat_type == "basketball":
+                    player_data.update({
+                        "points_per_game": stat.points_per_game,
+                        "rebounds_per_game": stat.rebounds_per_game,
+                        "assists_per_game": stat.assists_per_game
+                    })
+                
+                players.append(player_data)
+            
+            print(f"✅ Served {len(players)} {league_code} player stats from database")
+        else:
+            # Fallback to mock data if no database data
+            print(f"⚠️ No database data for {league_code}, using fallback data")
             if league_code == "NHL":
-                players = scrape_nhl_player_stats(stat_type, limit)
+                players = [
+                    {"name": "Connor McDavid", "team": "EDM", "position": "C", "goals": 12, "assists": 18, "points": 30},
+                    {"name": "Leon Draisaitl", "team": "EDM", "position": "C", "goals": 8, "assists": 15, "points": 23},
+                    {"name": "Nathan MacKinnon", "team": "COL", "position": "C", "goals": 10, "assists": 12, "points": 22},
+                    {"name": "Artemi Panarin", "team": "NYR", "position": "LW", "goals": 9, "assists": 14, "points": 23},
+                    {"name": "David Pastrnak", "team": "BOS", "position": "RW", "goals": 11, "assists": 8, "points": 19}
+                ]
             elif league_code == "PREMIER_LEAGUE":
-                players = scrape_premier_league_player_stats(stat_type, limit)
-            elif league_code == "NFL":
-                players = scrape_nfl_player_stats(stat_type, limit)
+                players = [
+                    {"name": "Erling Haaland", "team": "Manchester City", "position": "F", "goals": 8, "assists": 2, "points": 10},
+                    {"name": "Mohamed Salah", "team": "Liverpool", "position": "F", "goals": 6, "assists": 4, "points": 10},
+                    {"name": "Ollie Watkins", "team": "Aston Villa", "position": "F", "goals": 7, "assists": 1, "points": 8},
+                    {"name": "Son Heung-min", "team": "Tottenham", "position": "F", "goals": 5, "assists": 3, "points": 8},
+                    {"name": "Bukayo Saka", "team": "Arsenal", "position": "F", "goals": 4, "assists": 2, "points": 6}
+                ]
+            elif league_code == "NFL" and stat_type == "passing":
+                players = [
+                    {"name": "Josh Allen", "team": "BUF", "position": "QB", "pass_yards": 4306, "pass_touchdowns": 29, "interceptions": 18},
+                    {"name": "Dak Prescott", "team": "DAL", "position": "QB", "pass_yards": 4516, "pass_touchdowns": 36, "interceptions": 9},
+                    {"name": "Lamar Jackson", "team": "BAL", "position": "QB", "pass_yards": 3678, "pass_touchdowns": 24, "interceptions": 7},
+                    {"name": "Tua Tagovailoa", "team": "MIA", "position": "QB", "pass_yards": 4624, "pass_touchdowns": 29, "interceptions": 14},
+                    {"name": "Jalen Hurts", "team": "PHI", "position": "QB", "pass_yards": 3858, "pass_touchdowns": 23, "interceptions": 15}
+                ]
             elif league_code == "NBA":
-                players = scrape_nba_player_stats(limit)
+                players = [
+                    {"name": "Luka Dončić", "team": "DAL", "position": "PG", "points_per_game": 33.9, "rebounds_per_game": 9.2, "assists_per_game": 9.8},
+                    {"name": "Shai Gilgeous-Alexander", "team": "OKC", "position": "PG", "points_per_game": 30.1, "rebounds_per_game": 5.5, "assists_per_game": 6.2},
+                    {"name": "Giannis Antetokounmpo", "team": "MIL", "position": "PF", "points_per_game": 30.4, "rebounds_per_game": 11.5, "assists_per_game": 6.5},
+                    {"name": "Jayson Tatum", "team": "BOS", "position": "SF", "points_per_game": 26.9, "rebounds_per_game": 8.1, "assists_per_game": 4.9},
+                    {"name": "Anthony Edwards", "team": "MIN", "position": "SG", "points_per_game": 25.9, "rebounds_per_game": 5.4, "assists_per_game": 5.1}
+                ]
             else:
                 players = []
-            
-            # If scraper returns empty data, use fallback mock data
-            if not players:
-                print(f"⚠️ Scraper returned empty data for {league_code}, using fallback data")
-                if league_code == "NHL":
-                    players = [
-                        {"name": "Connor McDavid", "team": "EDM", "position": "C", "goals": 12, "assists": 18, "points": 30},
-                        {"name": "Leon Draisaitl", "team": "EDM", "position": "C", "goals": 8, "assists": 15, "points": 23},
-                        {"name": "Nathan MacKinnon", "team": "COL", "position": "C", "goals": 10, "assists": 12, "points": 22},
-                        {"name": "Artemi Panarin", "team": "NYR", "position": "LW", "goals": 9, "assists": 14, "points": 23},
-                        {"name": "David Pastrnak", "team": "BOS", "position": "RW", "goals": 11, "assists": 8, "points": 19}
-                    ]
-                elif league_code == "PREMIER_LEAGUE":
-                    players = [
-                        {"name": "Erling Haaland", "team": "Manchester City", "position": "F", "goals": 8, "assists": 2, "points": 10},
-                        {"name": "Mohamed Salah", "team": "Liverpool", "position": "F", "goals": 6, "assists": 4, "points": 10},
-                        {"name": "Ollie Watkins", "team": "Aston Villa", "position": "F", "goals": 7, "assists": 1, "points": 8},
-                        {"name": "Son Heung-min", "team": "Tottenham", "position": "F", "goals": 5, "assists": 3, "points": 8},
-                        {"name": "Bukayo Saka", "team": "Arsenal", "position": "F", "goals": 4, "assists": 2, "points": 6}
-                    ]
-                elif league_code == "NFL" and stat_type == "passing":
-                    players = [
-                        {"name": "Josh Allen", "team": "BUF", "position": "QB", "pass_yards": 4306, "pass_touchdowns": 29, "interceptions": 18},
-                        {"name": "Dak Prescott", "team": "DAL", "position": "QB", "pass_yards": 4516, "pass_touchdowns": 36, "interceptions": 9},
-                        {"name": "Lamar Jackson", "team": "BAL", "position": "QB", "pass_yards": 3678, "pass_touchdowns": 24, "interceptions": 7},
-                        {"name": "Tua Tagovailoa", "team": "MIA", "position": "QB", "pass_yards": 4624, "pass_touchdowns": 29, "interceptions": 14},
-                        {"name": "Jalen Hurts", "team": "PHI", "position": "QB", "pass_yards": 3858, "pass_touchdowns": 23, "interceptions": 15}
-                    ]
-                elif league_code == "NBA":
-                    players = [
-                        {"name": "Luka Dončić", "team": "DAL", "position": "PG", "points_per_game": 33.9, "rebounds_per_game": 9.2, "assists_per_game": 9.8},
-                        {"name": "Shai Gilgeous-Alexander", "team": "OKC", "position": "PG", "points_per_game": 30.1, "rebounds_per_game": 5.5, "assists_per_game": 6.2},
-                        {"name": "Giannis Antetokounmpo", "team": "MIL", "position": "PF", "points_per_game": 30.4, "rebounds_per_game": 11.5, "assists_per_game": 6.5},
-                        {"name": "Jayson Tatum", "team": "BOS", "position": "SF", "points_per_game": 26.9, "rebounds_per_game": 8.1, "assists_per_game": 4.9},
-                        {"name": "Anthony Edwards", "team": "MIN", "position": "SG", "points_per_game": 25.9, "rebounds_per_game": 5.4, "assists_per_game": 5.1}
-                    ]
-        except Exception as e:
-            print(f"❌ Error calling scraper for {league_code}: {e}")
-            players = []
         
         return {
             "league": league_code,
