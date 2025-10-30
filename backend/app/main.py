@@ -1,7 +1,7 @@
 from datetime import datetime
 from db.session import Base, engine
 from sqlalchemy.orm import sessionmaker
-from league_scrapper import fetch_nfl_data, fetch_nhl_data, fetch_nba_data, fetch_mlb_data
+from league_scrapper import fetch_nfl_data, fetch_nhl_data, fetch_nba_data
 from premier_league_scrapper import fetch_premier_league_data
 from models import League, Team, Game, Player, PlayerStats
 import argparse
@@ -145,12 +145,12 @@ def save_player_stats(session, league_id: int, season: str, stat_type: str, stat
     print(f"✅ Saved {saved_count} player stats for {league.name}")
 
 def run_scrape(leagues: list[str] = None):
+    print(f"\n🔄 Starting scrape at {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - leagues: {leagues or 'all'}")
     Base.metadata.create_all(bind=engine)
     LEAGUE_FETCHERS = {
         "NFL": fetch_nfl_data,
         "NHL": fetch_nhl_data,
         "NBA": fetch_nba_data,
-        "MLB": fetch_mlb_data,
         "PREMIER_LEAGUE": fetch_premier_league_data,
     }
 
@@ -225,53 +225,40 @@ def run_scrape(leagues: list[str] = None):
     print("\n🎉 Scraping complete!")
 
 def run_player_stats_scrape():
-    """Run player stats scraping for all leagues"""
-    from datetime import datetime
+    """Run league-specific player stats scraping"""
+    print(f"\n🔄 Starting league-specific player stats scraping at {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}...")
     
-    print("\n🔄 Starting player stats scraping...")
-    current_year = datetime.now().year
-    season = f"{current_year}-{current_year + 1}"
+    try:
+        # NHL player stats (skaters and goalies)
+        from nhl_player_stats_scraper import run_nhl_player_stats_scrape
+        run_nhl_player_stats_scrape()
+    except Exception as e:
+        print(f"❌ Error scraping NHL player stats: {e}")
     
-    with SessionLocal() as session:
-        # Get all leagues
-        leagues = session.query(League).all()
-        
-        for league in leagues:
-            print(f"\n📊 Scraping player stats for {league.name}...")
-            
-            try:
-                if league.name == "NHL":
-                    from player_stats_scraper import scrape_nhl_player_stats
-                    stats_data = scrape_nhl_player_stats('scoring', 20)
-                    if stats_data:
-                        save_player_stats(session, league.id, season, 'scoring', stats_data)
-                
-                elif league.name == "PREMIER_LEAGUE":
-                    from player_stats_scraper import scrape_premier_league_player_stats
-                    stats_data = scrape_premier_league_player_stats('scoring', 20)
-                    if stats_data:
-                        save_player_stats(session, league.id, season, 'scoring', stats_data)
-                
-                elif league.name == "NFL":
-                    from player_stats_scraper import scrape_nfl_player_stats
-                    # Scrape passing stats for NFL
-                    stats_data = scrape_nfl_player_stats('passing', 20)
-                    if stats_data:
-                        save_player_stats(session, league.id, season, 'passing', stats_data)
-                
-                elif league.name == "NBA":
-                    from player_stats_scraper import scrape_nba_player_stats
-                    stats_data = scrape_nba_player_stats(20)
-                    if stats_data:
-                        save_player_stats(session, league.id, season, 'basketball', stats_data)
-                
-                print(f"✅ {league.name} player stats updated")
-                
-            except Exception as e:
-                print(f"❌ Error scraping {league.name} player stats: {e}")
-                continue
+    try:
+        # NBA player stats
+        from nba_player_stats_scraper import run_nba_player_stats_scrape
+        run_nba_player_stats_scrape()
+    except Exception as e:
+        print(f"❌ Error scraping NBA player stats: {e}")
     
-    print("\n🎉 Player stats scraping complete!")
+    try:
+        # Premier League player stats
+        from premier_league_player_stats_scraper import run_premier_league_player_stats_scrape
+        run_premier_league_player_stats_scrape()
+    except Exception as e:
+        print(f"❌ Error scraping Premier League player stats: {e}")
+    
+    # Note: NFL player stats scraper not implemented yet due to complexity of different positions
+    print("ℹ️  NFL player stats scraper not implemented yet - positions are too diverse")
+    
+    print("🎉 League-specific player stats scraping complete!")
+
+def run_standings_scrape():
+    """Run standings scraping for all leagues"""
+    print(f"\n🔄 Starting standings scraping at {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}...")
+    from standings_scraper import run_standings_scrape as scrape_standings
+    scrape_standings()
 
 def main():
     parser = argparse.ArgumentParser()
@@ -284,18 +271,31 @@ def main():
     else:
         from apscheduler.schedulers.blocking import BlockingScheduler
         from apscheduler.triggers.cron import CronTrigger
+        from apscheduler.triggers.date import DateTrigger
+        import logging
         
         # Helsinki timezone
         helsinki_tz = pytz.timezone('Europe/Helsinki')
         
-        scheduler = BlockingScheduler(timezone=helsinki_tz)
+        # Configure logging for scheduler
+        logging.basicConfig(level=logging.INFO)
+        
+        # Ensure missed runs are handled gracefully
+        scheduler = BlockingScheduler(
+            timezone=helsinki_tz,
+            job_defaults={
+                'misfire_grace_time': 6 * 60 * 60,  # allow 6h late execution
+                'coalesce': True,                   # coalesce multiple missed runs into one
+                'max_instances': 1,
+            }
+        )
         
         # US leagues in Helsinki morning (e.g., 06:00, 07:00, 08:00, 12:00)
         scheduler.add_job(
             run_scrape,
-            CronTrigger(hour='6,7,8,10,12', minute=0, timezone=helsinki_tz),
+            CronTrigger(hour='6,7,8,10,12,13', minute=0, timezone=helsinki_tz),
             id='scraper_us_morning',
-            kwargs={"leagues": ["NFL", "NBA", "NHL"]}  # MLB deactivated
+            kwargs={"leagues": ["NFL", "NBA", "NHL"]}
         )
 
         # Premier League in Helsinki evening (e.g., 18:00, 20:00)
@@ -314,7 +314,32 @@ def main():
             kwargs={}
         )
 
-        print("🕐 Scheduler started - US leagues at 06/07/08/12, PL at 18/20, Player stats at 00/10 Helsinki time")
+        # Standings scraping - daily at 2 AM Helsinki time
+        scheduler.add_job(
+            run_standings_scrape,
+            CronTrigger(hour='2', minute=0, timezone=helsinki_tz),
+            id='scraper_standings',
+            kwargs={}
+        )
+
+        print("🕐 Scheduler started - US leagues at 06/07/08/10/12/13, PL at 16/18/19/22/0/1, Player stats at 00/10, Standings at 02 Helsinki time")
+        print("📅 Current Helsinki time:", datetime.now(helsinki_tz).strftime('%Y-%m-%d %H:%M:%S %Z'))
+        print("⏰ Scheduled jobs:")
+        for job in scheduler.get_jobs():
+            print(f"   - {job.id}: {job.trigger}")
+
+        # Immediate catch-up run so we don't miss data after downtime
+        try:
+            scheduler.add_job(
+                run_scrape,
+                DateTrigger(run_date=datetime.now(helsinki_tz)),
+                id='scraper_catchup_now',
+                kwargs={"leagues": ["NFL", "NBA", "NHL"]},
+                replace_existing=True,
+            )
+            print("▶️ Scheduled immediate catch-up run for NFL/NBA/NHL")
+        except Exception as e:
+            print(f"⚠️ Failed to schedule immediate catch-up: {e}")
         scheduler.start()
 
 if __name__ == "__main__":

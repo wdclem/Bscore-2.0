@@ -247,32 +247,9 @@ async def get_top_scorers(league_code: str, limit: int = 10):
             
             print(f"✅ Served {len(players)} {league_code} top scorers from database")
         else:
-            # Fallback to mock data if no database data
-            print(f"⚠️ No database data for {league_code}, using fallback data")
-            if league_code == "NHL":
-                players = [
-                    {"name": "Connor McDavid", "team": "EDM", "position": "C", "goals": 12, "assists": 18, "points": 30},
-                    {"name": "Leon Draisaitl", "team": "EDM", "position": "C", "goals": 8, "assists": 15, "points": 23},
-                    {"name": "Nathan MacKinnon", "team": "COL", "position": "C", "goals": 10, "assists": 12, "points": 22},
-                    {"name": "Artemi Panarin", "team": "NYR", "position": "LW", "goals": 9, "assists": 14, "points": 23},
-                    {"name": "David Pastrnak", "team": "BOS", "position": "RW", "goals": 11, "assists": 8, "points": 19}
-                ]
-            elif league_code == "PREMIER_LEAGUE":
-                players = [
-                    {"name": "Erling Haaland", "team": "Manchester City", "position": "F", "goals": 8, "assists": 2, "points": 10},
-                    {"name": "Mohamed Salah", "team": "Liverpool", "position": "F", "goals": 6, "assists": 4, "points": 10},
-                    {"name": "Ollie Watkins", "team": "Aston Villa", "position": "F", "goals": 7, "assists": 1, "points": 8},
-                    {"name": "Son Heung-min", "team": "Tottenham", "position": "F", "goals": 5, "assists": 3, "points": 8},
-                    {"name": "Bukayo Saka", "team": "Arsenal", "position": "F", "goals": 4, "assists": 2, "points": 6}
-                ]
-            elif league_code == "NFL":
-                # NFL doesn't have individual goal scorers, return empty
-                players = []
-            elif league_code == "NBA":
-                # NBA doesn't have individual goal scorers, return empty  
-                players = []
-            else:
-                players = []
+            # No database data available
+            print(f"⚠️ No database data for {league_code} top scorers")
+            players = []
         
         # Sort by goals and return top N
         players.sort(key=lambda x: x.get("goals", 0), reverse=True)
@@ -540,42 +517,9 @@ async def get_player_stats(league_code: str, stat_type: str = "scoring", limit: 
             
             print(f"✅ Served {len(players)} {league_code} player stats from database")
         else:
-            # Fallback to mock data if no database data
-            print(f"⚠️ No database data for {league_code}, using fallback data")
-            if league_code == "NHL":
-                players = [
-                    {"name": "Connor McDavid", "team": "EDM", "position": "C", "goals": 12, "assists": 18, "points": 30},
-                    {"name": "Leon Draisaitl", "team": "EDM", "position": "C", "goals": 8, "assists": 15, "points": 23},
-                    {"name": "Nathan MacKinnon", "team": "COL", "position": "C", "goals": 10, "assists": 12, "points": 22},
-                    {"name": "Artemi Panarin", "team": "NYR", "position": "LW", "goals": 9, "assists": 14, "points": 23},
-                    {"name": "David Pastrnak", "team": "BOS", "position": "RW", "goals": 11, "assists": 8, "points": 19}
-                ]
-            elif league_code == "PREMIER_LEAGUE":
-                players = [
-                    {"name": "Erling Haaland", "team": "Manchester City", "position": "F", "goals": 8, "assists": 2, "points": 10},
-                    {"name": "Mohamed Salah", "team": "Liverpool", "position": "F", "goals": 6, "assists": 4, "points": 10},
-                    {"name": "Ollie Watkins", "team": "Aston Villa", "position": "F", "goals": 7, "assists": 1, "points": 8},
-                    {"name": "Son Heung-min", "team": "Tottenham", "position": "F", "goals": 5, "assists": 3, "points": 8},
-                    {"name": "Bukayo Saka", "team": "Arsenal", "position": "F", "goals": 4, "assists": 2, "points": 6}
-                ]
-            elif league_code == "NFL" and stat_type == "passing":
-                players = [
-                    {"name": "Josh Allen", "team": "BUF", "position": "QB", "pass_yards": 4306, "pass_touchdowns": 29, "interceptions": 18},
-                    {"name": "Dak Prescott", "team": "DAL", "position": "QB", "pass_yards": 4516, "pass_touchdowns": 36, "interceptions": 9},
-                    {"name": "Lamar Jackson", "team": "BAL", "position": "QB", "pass_yards": 3678, "pass_touchdowns": 24, "interceptions": 7},
-                    {"name": "Tua Tagovailoa", "team": "MIA", "position": "QB", "pass_yards": 4624, "pass_touchdowns": 29, "interceptions": 14},
-                    {"name": "Jalen Hurts", "team": "PHI", "position": "QB", "pass_yards": 3858, "pass_touchdowns": 23, "interceptions": 15}
-                ]
-            elif league_code == "NBA":
-                players = [
-                    {"name": "Luka Dončić", "team": "DAL", "position": "PG", "points_per_game": 33.9, "rebounds_per_game": 9.2, "assists_per_game": 9.8},
-                    {"name": "Shai Gilgeous-Alexander", "team": "OKC", "position": "PG", "points_per_game": 30.1, "rebounds_per_game": 5.5, "assists_per_game": 6.2},
-                    {"name": "Giannis Antetokounmpo", "team": "MIL", "position": "PF", "points_per_game": 30.4, "rebounds_per_game": 11.5, "assists_per_game": 6.5},
-                    {"name": "Jayson Tatum", "team": "BOS", "position": "SF", "points_per_game": 26.9, "rebounds_per_game": 8.1, "assists_per_game": 4.9},
-                    {"name": "Anthony Edwards", "team": "MIN", "position": "SG", "points_per_game": 25.9, "rebounds_per_game": 5.4, "assists_per_game": 5.1}
-                ]
-            else:
-                players = []
+            # No database data available
+            print(f"⚠️ No database data for {league_code} player stats")
+            players = []
         
         return {
             "league": league_code,
