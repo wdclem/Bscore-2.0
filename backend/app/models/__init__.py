@@ -4,3 +4,7 @@ from .game import Game
 from .player import Player
 from .standing import Standing
 from .player_stats import PlayerStats
+from .nhl_player_stats import NHLPlayerStats
+from .nhl_goalie_stats import NHLGoalieStats
+from .nba_player_stats import NBAPlayerStats
+from .premier_league_player_stats import PremierLeaguePlayerStats

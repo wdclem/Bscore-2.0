@@ -13,6 +13,10 @@ class League(Base):
     players = relationship("Player", back_populates="league")
     standings = relationship("Standing", back_populates="league")
     player_stats = relationship("PlayerStats", back_populates="league")
+    nhl_player_stats = relationship("NHLPlayerStats", back_populates="league")
+    nhl_goalie_stats = relationship("NHLGoalieStats", back_populates="league")
+    nba_player_stats = relationship("NBAPlayerStats", back_populates="league")
+    premier_league_player_stats = relationship("PremierLeaguePlayerStats", back_populates="league")
 
     def __repr__(self):
         return f"<League(id={self.id}, name='{self.name}')>"

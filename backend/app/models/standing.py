@@ -21,7 +21,7 @@ class Standing(Base):
     
     # Points/Rankings
     points = Column(Integer, nullable=True)  # NHL, Soccer
-    win_pct = Column(Float, nullable=True)  # NFL, NBA, MLB
+    win_pct = Column(Float, nullable=True)  # NFL, NBA
     points_pct = Column(Float, nullable=True)  # NHL
     
     # Scoring stats
